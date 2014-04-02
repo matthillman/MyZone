@@ -27,14 +27,22 @@ NS_INLINE TZRange TZRangeMake(NSUInteger min, NSUInteger max) {
 NS_INLINE BOOL TZRangesEqual(TZRange range1, TZRange range2) {
     return (range1.min == range2.min && range1.max == range2.max);
 }
+typedef enum : NSUInteger {
+    MZZone0 = 0,
+    MZZone1 = 1,
+    MZZone2 = 2,
+    MZZone3 = 3,
+    MZZone4 = 4,
+    MZZone5 = 5,
+} MZZoneKey;
 
 typedef struct _MZPoint {
     NSTimeInterval time;
     NSUInteger effort;
-    NSUInteger zone;
+    MZZoneKey zone;
 } MZPoint;
 
-NS_INLINE MZPoint MZPointMake(NSTimeInterval time, NSUInteger effort, NSUInteger zone) {
+NS_INLINE MZPoint MZPointMake(NSTimeInterval time, NSUInteger effort, MZZoneKey zone) {
     MZPoint p;
     p.time = time;
     p.effort = effort;

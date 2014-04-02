@@ -36,6 +36,7 @@ NS_INLINE BarLengths BarLengthsMake(CGFloat xMin, CGFloat xMax, CGFloat yMin, CG
 @interface BarChart ()
 @property (strong, nonatomic) NSArray *sorted;
 @property (assign, nonatomic) BarLengths lengths;
+@property (strong, nonatomic) NSDictionary *attributes;
 @end
 
 @implementation BarChart
@@ -71,10 +72,12 @@ NS_INLINE BarLengths BarLengthsMake(CGFloat xMin, CGFloat xMax, CGFloat yMin, CG
 - (UIImage *)renderImgaeAtSize:(CGSize)size
 {
     CGSize drawingSize = [self setupLengthsInSize:size];
-    
+    CGSize imageSize = drawingSize;
+    imageSize.height += self.lengths.yPad;
+    imageSize.width += self.lengths.xPad;
     CGContextRef context = UIGraphicsGetCurrentContext();
     UIGraphicsPushContext(context);
-    UIGraphicsBeginImageContextWithOptions(size, NO, [UIScreen mainScreen].scale);
+    UIGraphicsBeginImageContextWithOptions(imageSize, NO, [UIScreen mainScreen].scale);
     
     [self drawBarsInSize:drawingSize withNumberOfTicks:10];
     
@@ -154,25 +157,32 @@ NS_INLINE BarLengths BarLengthsMake(CGFloat xMin, CGFloat xMax, CGFloat yMin, CG
     }
     
     CGFloat xpad = !self.thumbnail ? 21/320.0f * size.width : 0;
-    CGFloat ypad = !self.thumbnail ? 7/160.0f * size.height : 0;
+    CGFloat ypad = !self.thumbnail ? 10/160.0f * size.height : 0;
     
     self.lengths = BarLengthsMake(minX, maxX, minY, maxY, xpad, ypad);
+    self.attributes = @{NSFontAttributeName: [UIFont fontWithName:@"AvenirNextCondensed-Regular" size:ypad]};
     
     CGSize drawingSize = size;
     drawingSize.width -= self.lengths.xPad;
     drawingSize.height -= self.lengths.yPad;
+    
+    if ((size.width / (CGFloat)self.points.count) < 5 && !self.thumbnail && !self.average) {
+        drawingSize.width = 5 * self.points.count;
+    }
     
     return drawingSize;
 }
 
 - (void)draw:(NSInteger)number labelsInHeight:(CGFloat)height
 {
+    NSString *label;
+    CGFloat y;
+    [[UIColor lightGrayColor] setStroke];
     for (NSInteger i = 0; i <= number; ++i) {
-        CGFloat y = (i * height / number) + self.lengths.yPad;
-        [[UIColor lightGrayColor] setStroke];
+        y = (i * (height - self.lengths.yPad * 2) / number) + self.lengths.yPad;
         if (i < number) {
-            NSString *label = [NSString stringWithFormat:@"%.0f", floor((10-i) * self.lengths.yLength / 10)];
-            [label drawAtPoint:CGPointMake(3 + (5*(3-label.length)), y - self.lengths.xPad/3) withAttributes:@{NSFontAttributeName: [UIFont fontWithName:@"AvenirNextCondensed-Regular" size:self.lengths.xPad/2]}];
+            label = [NSString stringWithFormat:@"%.0f", floor((10-i) * self.lengths.yLength / 10)];
+            [label drawAtPoint:CGPointMake(3 + (5*(3-label.length)), y - self.lengths.xPad/3) withAttributes:self.attributes];
         }
     }
 }
@@ -183,6 +193,8 @@ NS_INLINE BarLengths BarLengthsMake(CGFloat xMin, CGFloat xMax, CGFloat yMin, CG
     self.sorted = [self.points sortedArrayUsingDescriptors:@[descriptor]];
     
     CGFloat w = size.width / (CGFloat)self.sorted.count;
+    
+    CGFloat x0 = self.lengths.xMin, xf = self.lengths.xMax;
     
     BarLengths l = self.lengths;
     // shirink the dataset if we're making a thumbnail and we need to
@@ -213,7 +225,7 @@ NS_INLINE BarLengths BarLengthsMake(CGFloat xMin, CGFloat xMax, CGFloat yMin, CG
             w = size.width / (CGFloat)self.sorted.count;
         } else {
             w = 5;
-            size.width = (5 * self.sorted.count) + l.xPad;
+            size.width = 5 * self.sorted.count;
         }
     }
     
@@ -222,25 +234,78 @@ NS_INLINE BarLengths BarLengthsMake(CGFloat xMin, CGFloat xMax, CGFloat yMin, CG
     if (!self.thumbnail) {
         for (NSInteger i = 0; i <= ticks; ++i) {
             path = [UIBezierPath bezierPath];
-            CGFloat y = (i * size.height / ticks) + l.yPad;
+            CGFloat y = (i * (size.height - l.yPad * 2) / ticks) + l.yPad;
             [path moveToPoint:CGPointMake(l.xPad - 3, y)];
             [path addLineToPoint:CGPointMake(size.width + l.xPad, y)];
             [[UIColor lightGrayColor] setStroke];
             path.lineWidth = .5;
             [path stroke];
         }
+        
+        NSDate *d0 = [NSDate dateWithTimeIntervalSince1970:x0];
+        NSUInteger componentFlags = NSYearCalendarUnit | NSMonthCalendarUnit | NSDayCalendarUnit | NSHourCalendarUnit | NSMinuteCalendarUnit;// | NSSecondCalendarUnit;
+        NSDateComponents *tickComponents = [[NSCalendar currentCalendar] components:componentFlags fromDate:d0];
+        NSDateComponents *fiveMinTickComponents = [tickComponents copy];
+        NSDateComponents *labelComponents = [tickComponents copy];
+        fiveMinTickComponents.minute = ceil((float) tickComponents.minute / 5.0) * 5.0;
+        
+        NSDate *firstTick = [[NSCalendar currentCalendar] dateFromComponents:tickComponents];
+        NSDate *firstFiveMinTick = [[NSCalendar currentCalendar] dateFromComponents:fiveMinTickComponents];
+        
+        labelComponents.minute = ceil((float) labelComponents.minute / 15.0) * 15.0;
+        NSDate *firstLabel = [[NSCalendar currentCalendar] dateFromComponents:labelComponents];
+        
+        NSDateFormatter *dateFormat = [[NSDateFormatter alloc] init];
+        dateFormat.dateFormat = @"HH:mm";
+        dateFormat.timeZone = [NSTimeZone timeZoneWithAbbreviation:@"GMT"];
+        
+        // Draw minute ticks with dark ticks every five minutes and labels every 15
+        CGFloat oneMin = 60;
+        CGFloat tickSpacing = self.average ? oneMin / (xf - x0) * (size.width - l.xPad) : w;
+        CGFloat yTop = size.height - l.yPad;
+        NSInteger xTicks = ceil((xf - x0) / oneMin);
+        CGFloat offset = [firstTick timeIntervalSinceDate:d0] / (xf - x0) * (size.width - l.xPad);
+        NSInteger labelOffset = floor([firstLabel timeIntervalSinceDate:firstTick] / oneMin);
+        NSInteger fiveMinTickOffset = floor([firstFiveMinTick timeIntervalSinceDate:firstTick] / oneMin);
+        NSString *label;
+        CGFloat x;
+        
+        for (NSInteger i = 0; i <= xTicks; ++i) {
+            path = [UIBezierPath bezierPath];
+            x = (i * tickSpacing) + l.xPad + offset;
+            [path moveToPoint:CGPointMake(x, yTop)];
+            
+            if (i % 15 == labelOffset) {
+                [[UIColor blackColor] setStroke];
+                path.lineWidth = 1;
+                [path addLineToPoint:CGPointMake(x, yTop + l.yPad/3)];
+                labelComponents = [[NSCalendar currentCalendar] components:componentFlags fromDate:[NSDate dateWithTimeInterval:i * oneMin sinceDate:d0]];
+                labelComponents.minute = ceil((float) labelComponents.minute / 15.0) * 15.0;
+                label = [dateFormat stringFromDate:[[NSCalendar currentCalendar] dateFromComponents:labelComponents]];
+                [label drawAtPoint:CGPointMake(x - [(UIFont *)self.attributes[NSFontAttributeName] pointSize], yTop) withAttributes:self.attributes];
+            } else if (i % 5 == fiveMinTickOffset) {
+                [[UIColor blackColor] setStroke];
+                path.lineWidth = 1;
+                [path addLineToPoint:CGPointMake(x, yTop + l.yPad/2)];
+            } else {
+                [[UIColor lightGrayColor] setStroke];
+                path.lineWidth = .5;
+                [path addLineToPoint:CGPointMake(x, yTop + l.yPad/4)];
+            }
+            [path stroke];
+        }
     }
     
     for (GraphPoint *point in self.sorted) {
         NSInteger i = [self.sorted indexOfObject:point];
-        CGPoint trans = CGPointMake(i * w,
-                                    (size.height - ((point.point.y - l.yMin) / l.yLength * size.height)) + l.yPad);
         path = [UIBezierPath bezierPath];
         path.lineWidth = w > 5 ? 1 : .5;
-        [path moveToPoint:CGPointMake(0, size.height + l.yPad)];
+        CGPoint trans = CGPointMake(i * w,
+                                    (size.height - ((point.point.y - l.yMin) / l.yLength * (size.height - l.yPad * 2))) - l.yPad);
+        [path moveToPoint:CGPointMake(0, size.height - l.yPad)];
         [path addLineToPoint:CGPointMake(0, trans.y)];
         [path addLineToPoint:CGPointMake(w-path.lineWidth, trans.y)];
-        [path addLineToPoint:CGPointMake(w-path.lineWidth, size.height + l.yPad)];
+        [path addLineToPoint:CGPointMake(w-path.lineWidth, size.height - l.yPad)];
         [path closePath];
         
         UIColor *stroke = self.colors[point.category][@"stroke"] ?: [UIColor blackColor];
@@ -252,7 +317,7 @@ NS_INLINE BarLengths BarLengthsMake(CGFloat xMin, CGFloat xMax, CGFloat yMin, CG
         CGContextRef old = UIGraphicsGetCurrentContext();
         CGContextSaveGState(old);
         
-        CGContextTranslateCTM(old, trans.x + l.xPad + (path.lineWidth / 2), 0);
+        CGContextTranslateCTM(old, trans.x + l.xPad, 0);
         
         [path stroke];
         [path fill];

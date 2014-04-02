@@ -62,7 +62,7 @@
 - (void)setMEPs:(NSNumber *)MEPs
 {
     _MEPs = MEPs;
-    self.text.text = [self.MEPs integerValue] > 0 ? [NSString stringWithFormat:@"%d", [self.MEPs integerValue]] : @"N/A";
+    self.text.text = [self.MEPs integerValue] > 0 ? [NSString stringWithFormat:@"%ld", (long)[self.MEPs integerValue]] : @"N/A";
     [self.text sizeToFont];
 }
 

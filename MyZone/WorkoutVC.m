@@ -15,15 +15,18 @@
 #import "WorkoutCell.h"
 #import "ScrollingChartView.h"
 #import "BarChart.h"
+#import "MZQuery.h"
 
 static NSString *const HeaderViewIdentifier = @"Workout Head";
 static NSString *const CellIdentifier = @"Workout Cell";
 
-@interface WorkoutVC () <UICollectionViewDataSource, UICollectionViewDelegate>
-//@property (weak, nonatomic) IBOutlet UIButton *chartButton;
+@interface WorkoutVC () <UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, UIActionSheetDelegate>
 @property (weak, nonatomic) IBOutlet ScrollingChartView *chartView;
 @property (weak, nonatomic) IBOutlet UICollectionView *collectionView;
 @property (strong, nonatomic) IBOutlet ArrayDataSource *dataSource;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *chartHeight;
+
+@property (strong, nonatomic) UIButton *titleButton;
 @end
 
 @implementation WorkoutVC
@@ -32,8 +35,17 @@ static NSString *const CellIdentifier = @"Workout Cell";
 {
     [super viewDidLoad];
     
-    self.chartView.points = self.workout.grapher.points;
+    self.titleButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+    self.titleButton.titleLabel.font = [UIFont fontWithName:@"AvenirNext-Regular" size:17];
+    [self.titleButton setTitle:self.workout.activity forState:UIControlStateNormal];
+    [self.titleButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    [self.titleButton addTarget:self action:@selector(showActions) forControlEvents:UIControlEventTouchUpInside];
+    [self.titleButton sizeToFit];
+    self.navigationItem.titleView = self.titleButton;
+    
+    
     self.chartView.colors = self.workout.grapher.colors;
+    self.chartView.points = self.workout.grapher.points;
     
     self.chartView.target = self;
     self.chartView.action = @selector(showChart);
@@ -50,6 +62,44 @@ static NSString *const CellIdentifier = @"Workout Cell";
     
 }
 
+- (void)showActions
+{
+    UIActionSheet *activitySheet = [[UIActionSheet alloc] initWithTitle:@"Change Activity for Workout" delegate:self cancelButtonTitle:nil destructiveButtonTitle:nil otherButtonTitles:nil];
+    for (NSDictionary *act in self.workout.activityList) {
+        [activitySheet addButtonWithTitle:act[@"label"]];
+    }
+    [activitySheet addButtonWithTitle:@"Cancel"];
+    activitySheet.cancelButtonIndex = activitySheet.numberOfButtons-1;
+    activitySheet.tintColor = [UIColor colorForR:255 G:22 B:23 A:1];
+    [activitySheet showInView:self.view];
+}
+
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if (buttonIndex != actionSheet.cancelButtonIndex) {
+        UIActivityIndicatorView *spinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
+        [spinner startAnimating];
+        self.navigationItem.titleView = spinner;
+        [MZQuery updateWorkout:self.workout.hrhIndex activity:self.workout.activityList[buttonIndex][@"value"] completionHandler:^(id response) {
+            NSString *selectedActivity = (NSString *)response;
+            [self.titleButton setTitle:selectedActivity forState:UIControlStateNormal];
+            [self.titleButton sizeToFit];
+            self.navigationItem.titleView = self.titleButton;
+            self.workout.activity = selectedActivity;
+        }];
+    }
+}
+
+- (void)willPresentActionSheet:(UIActionSheet *)actionSheet
+{
+    for (UIView *subView in actionSheet.subviews) {
+        if ([subView isKindOfClass:[UIButton class]]) {
+            UIButton *button = (UIButton *)subView;
+            [button setTitleColor:[UIColor colorForR:255 G:22 B:23 A:1] forState:UIControlStateNormal|UIControlStateSelected|UIControlStateHighlighted];
+        }
+    }
+}
+
 - (void)showChart
 {
     [self performSegueWithIdentifier:@"show chart" sender:self];
@@ -59,7 +109,8 @@ static NSString *const CellIdentifier = @"Workout Cell";
 {
     if ([segue.identifier isEqualToString:@"show chart"]) {
         ScrollingImageVC *vc = (ScrollingImageVC *)segue.destinationViewController;
-        vc.image = [self.workout workoutGraphFullWidthAtSize:CGSizeMake(CGRectGetHeight(self.view.bounds), CGRectGetWidth(self.view.bounds))];
+        vc.image = [self.workout workoutGraphFullWidthAtSize:CGSizeMake(568, 320)];
+        vc.navigationItem.title = @"Workout Graph";
     }
 }
 
@@ -67,12 +118,7 @@ static NSString *const CellIdentifier = @"Workout Cell";
 {
     WorkoutHeading *rv = [collectionView dequeueReusableSupplementaryViewOfKind:UICollectionElementKindSectionHeader withReuseIdentifier:HeaderViewIdentifier forIndexPath:indexPath];
     
-    [rv configureWithDate:self.workout.start
-               moveNumber:self.workout.move
-                       of:self.workout.numberOfMoves
-               targetZone:self.workout.targetZone
-                    maxHr:self.workout.maxHeartRate
-                 duration:self.workout.totalDuration];
+    [rv configureWithWorkout:self.workout];
     
     return rv;
 }
@@ -86,4 +132,13 @@ static NSString *const CellIdentifier = @"Workout Cell";
 {
     return [self.dataSource collectionView:collectionView cellForItemAtIndexPath:indexPath];
 }
+
+- (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration
+{
+    [super willAnimateRotationToInterfaceOrientation:toInterfaceOrientation duration:duration];
+    self.chartHeight.constant = UIInterfaceOrientationIsPortrait(toInterfaceOrientation) ? 160 : 120;
+    [self.view setNeedsLayout];
+    [self.view layoutIfNeeded];
+}
+
 @end

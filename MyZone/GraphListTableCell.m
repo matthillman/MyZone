@@ -1,18 +1,18 @@
 //
-//  GraphListCell.m
+//  GraphCellBase.m
 //  MyZone
 //
-//  Created by Matthew Hillman on 2/10/14.
+//  Created by Matthew Hillman on 4/2/14.
 //  Copyright (c) 2014 Matthew Hillman. All rights reserved.
 //
 
-#import "GraphListCell.h"
+#import "GraphListTableCell.h"
 #import "BarChart.h"
 #import "MZWorkout.h"
 #import "MEPsLabel.h"
 #import "EffortLabel.h"
 
-@interface GraphListCell ()
+@interface GraphListTableCell ()
 @property (weak, nonatomic) IBOutlet UIImageView *graphView;
 @property (weak, nonatomic) IBOutlet UILabel *titleLabel;
 @property (weak, nonatomic) IBOutlet UILabel *subTitleLabel;
@@ -20,50 +20,9 @@
 @property (weak, nonatomic) IBOutlet EffortLabel *effort;
 @property (weak, nonatomic) IBOutlet UILabel *calories;
 @property (weak, nonatomic) IBOutlet NSLayoutConstraint *mepsTop;
-@property (strong, nonatomic) CALayer *bottomBorder;
 @end
 
-@implementation GraphListCell
-
-- (id)init
-{
-    if (!(self = [super init])) return nil;
-    [self setup];
-    return self;
-}
-
-- (id)initWithCoder:(NSCoder *)aDecoder
-{
-    if (!(self = [super initWithCoder:aDecoder])) return nil;
-    [self setup];
-    return self;
-}
-
-- (id)initWithFrame:(CGRect)frame
-{
-    if (!(self = [super initWithFrame:frame])) return nil;
-    [self setup];
-    return self;
-}
-
-- (void)setup
-{
-    self.clipsToBounds = YES;
-    
-    CALayer *bottomBorder = [CALayer layer];
-    bottomBorder.borderColor = [UIColor lightGrayColor].CGColor;
-    bottomBorder.borderWidth = 1;
-    bottomBorder.frame = CGRectMake(-1, -1, 568.f + 2, CGRectGetHeight(self.frame));
-    
-    [self.layer addSublayer:bottomBorder];
-    
-    CALayer *bottomBorderClip = [CALayer layer];
-    bottomBorderClip.borderColor = [UIColor whiteColor].CGColor;
-    bottomBorderClip.borderWidth = 1;
-    bottomBorderClip.frame = CGRectMake(-1, -1, 98.f + 1, CGRectGetHeight(self.frame));
-    
-    [self.layer addSublayer:bottomBorderClip];
-}
+@implementation GraphListTableCell
 
 - (void)configureForWorkout:(MZWorkout *)workout
 {
@@ -86,7 +45,7 @@
 }
 
 - (void)updateLayout:(UIInterfaceOrientation)orientation
-{    
+{
     if (UIDeviceOrientationIsLandscape(orientation)) {
         self.mepsTop.constant = 10;
     } else {
@@ -94,5 +53,4 @@
     }
     [self.effort setNeedsDisplay];
 }
-
 @end

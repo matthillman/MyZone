@@ -147,6 +147,9 @@
 
 @property (strong, nonatomic, readonly) BarChart *grapher;
 
+@property (strong, nonatomic) NSString *hrhIndex;
+@property (strong, nonatomic) NSArray *activityList;
+
 
 - (UIImage *)workoutGraphAtSize:(CGSize)size;
 - (UIImage *)workoutThumbnailGraphAtSize:(CGSize)size;

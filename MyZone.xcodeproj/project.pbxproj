@@ -15,6 +15,7 @@
 		C90AADAD18B5570600EE36EA /* CenteringScrollView.m in Sources */ = {isa = PBXBuildFile; fileRef = C90AADAC18B5570600EE36EA /* CenteringScrollView.m */; };
 		C90E8D0318AE80F300918C6A /* UILabel+SizeFontToFit.m in Sources */ = {isa = PBXBuildFile; fileRef = C90E8D0218AE80F300918C6A /* UILabel+SizeFontToFit.m */; };
 		C90E8D0718AE8A6100918C6A /* ScrollingImageVC.m in Sources */ = {isa = PBXBuildFile; fileRef = C90E8D0618AE8A6100918C6A /* ScrollingImageVC.m */; };
+		C91840F118EC6B090072668A /* GraphListTableCell.m in Sources */ = {isa = PBXBuildFile; fileRef = C91840F018EC6B090072668A /* GraphListTableCell.m */; };
 		C9528C2518AA501E008E3F02 /* Logger.m in Sources */ = {isa = PBXBuildFile; fileRef = C9528C2418AA501E008E3F02 /* Logger.m */; };
 		C9528C2918AA84ED008E3F02 /* MZEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = C9528C2818AA84ED008E3F02 /* MZEvent.m */; };
 		C9528C2C18AAA952008E3F02 /* MZWorkout.m in Sources */ = {isa = PBXBuildFile; fileRef = C9528C2B18AAA952008E3F02 /* MZWorkout.m */; };
@@ -23,6 +24,9 @@
 		C9528C3618AAD7B0008E3F02 /* GraphPoint.m in Sources */ = {isa = PBXBuildFile; fileRef = C9528C3518AAD7B0008E3F02 /* GraphPoint.m */; };
 		C9528C3918ABC0D1008E3F02 /* UIColor+RGB.m in Sources */ = {isa = PBXBuildFile; fileRef = C9528C3818ABC0D1008E3F02 /* UIColor+RGB.m */; };
 		C9528C3C18AE68C6008E3F02 /* MEPsLabel.m in Sources */ = {isa = PBXBuildFile; fileRef = C9528C3B18AE68C6008E3F02 /* MEPsLabel.m */; };
+		C9885C2418C79AA400A11C03 /* _fromuikit_DisclosureArrow@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C9885C2318C79AA400A11C03 /* _fromuikit_DisclosureArrow@2x.png */; };
+		C99CBD2C18DA1CEC009F8CBC /* UIBezierPath+IOS7RoundedRect.m in Sources */ = {isa = PBXBuildFile; fileRef = C99CBD2B18DA1CEC009F8CBC /* UIBezierPath+IOS7RoundedRect.m */; };
+		C99CBD2F18DA1D2D009F8CBC /* Effortlabel.m in Sources */ = {isa = PBXBuildFile; fileRef = C99CBD2E18DA1D2D009F8CBC /* Effortlabel.m */; };
 		C9B4FC2E18A9A01100E5D011 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C9B4FC2D18A9A01100E5D011 /* Foundation.framework */; };
 		C9B4FC3018A9A01100E5D011 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C9B4FC2F18A9A01100E5D011 /* CoreGraphics.framework */; };
 		C9B4FC3218A9A01100E5D011 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C9B4FC3118A9A01100E5D011 /* UIKit.framework */; };
@@ -43,6 +47,9 @@
 		C9B4FC6D18A9A54900E5D011 /* ArrayDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = C9B4FC6C18A9A54900E5D011 /* ArrayDataSource.m */; };
 		C9B4FC7018A9A74F00E5D011 /* MZQuery.m in Sources */ = {isa = PBXBuildFile; fileRef = C9B4FC6F18A9A74F00E5D011 /* MZQuery.m */; };
 		C9B4FC7318A9D7F100E5D011 /* LoginVC.m in Sources */ = {isa = PBXBuildFile; fileRef = C9B4FC7218A9D7F100E5D011 /* LoginVC.m */; };
+		C9D567AB18EC5175005D1A2D /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C9D567AA18EC5175005D1A2D /* Security.framework */; };
+		C9D567B318EC57E0005D1A2D /* SSKeychain.m in Sources */ = {isa = PBXBuildFile; fileRef = C9D567B018EC57E0005D1A2D /* SSKeychain.m */; };
+		C9D567B418EC57E0005D1A2D /* SSKeychainQuery.m in Sources */ = {isa = PBXBuildFile; fileRef = C9D567B218EC57E0005D1A2D /* SSKeychainQuery.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -72,6 +79,8 @@
 		C90E8D0218AE80F300918C6A /* UILabel+SizeFontToFit.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UILabel+SizeFontToFit.m"; sourceTree = "<group>"; };
 		C90E8D0518AE8A6100918C6A /* ScrollingImageVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ScrollingImageVC.h; sourceTree = "<group>"; };
 		C90E8D0618AE8A6100918C6A /* ScrollingImageVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ScrollingImageVC.m; sourceTree = "<group>"; };
+		C91840EF18EC6B090072668A /* GraphListTableCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GraphListTableCell.h; sourceTree = "<group>"; };
+		C91840F018EC6B090072668A /* GraphListTableCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GraphListTableCell.m; sourceTree = "<group>"; };
 		C9528C2318AA501E008E3F02 /* Logger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Logger.h; sourceTree = "<group>"; };
 		C9528C2418AA501E008E3F02 /* Logger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Logger.m; sourceTree = "<group>"; };
 		C9528C2718AA84ED008E3F02 /* MZEvent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MZEvent.h; sourceTree = "<group>"; };
@@ -89,6 +98,11 @@
 		C9528C3818ABC0D1008E3F02 /* UIColor+RGB.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIColor+RGB.m"; sourceTree = "<group>"; };
 		C9528C3A18AE68C6008E3F02 /* MEPsLabel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MEPsLabel.h; sourceTree = "<group>"; };
 		C9528C3B18AE68C6008E3F02 /* MEPsLabel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MEPsLabel.m; sourceTree = "<group>"; };
+		C9885C2318C79AA400A11C03 /* _fromuikit_DisclosureArrow@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "_fromuikit_DisclosureArrow@2x.png"; sourceTree = "<group>"; };
+		C99CBD2A18DA1CEC009F8CBC /* UIBezierPath+IOS7RoundedRect.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIBezierPath+IOS7RoundedRect.h"; sourceTree = "<group>"; };
+		C99CBD2B18DA1CEC009F8CBC /* UIBezierPath+IOS7RoundedRect.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIBezierPath+IOS7RoundedRect.m"; sourceTree = "<group>"; };
+		C99CBD2D18DA1D2D009F8CBC /* EffortLabel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EffortLabel.h; sourceTree = "<group>"; };
+		C99CBD2E18DA1D2D009F8CBC /* Effortlabel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Effortlabel.m; sourceTree = "<group>"; };
 		C9B4FC2A18A9A01100E5D011 /* MyZone.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MyZone.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C9B4FC2D18A9A01100E5D011 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		C9B4FC2F18A9A01100E5D011 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -120,6 +134,11 @@
 		C9B4FC6F18A9A74F00E5D011 /* MZQuery.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MZQuery.m; sourceTree = "<group>"; };
 		C9B4FC7118A9D7F100E5D011 /* LoginVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LoginVC.h; sourceTree = "<group>"; };
 		C9B4FC7218A9D7F100E5D011 /* LoginVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LoginVC.m; sourceTree = "<group>"; };
+		C9D567AA18EC5175005D1A2D /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		C9D567AF18EC57E0005D1A2D /* SSKeychain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSKeychain.h; sourceTree = "<group>"; };
+		C9D567B018EC57E0005D1A2D /* SSKeychain.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SSKeychain.m; sourceTree = "<group>"; };
+		C9D567B118EC57E0005D1A2D /* SSKeychainQuery.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSKeychainQuery.h; sourceTree = "<group>"; };
+		C9D567B218EC57E0005D1A2D /* SSKeychainQuery.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SSKeychainQuery.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -127,6 +146,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C9D567AB18EC5175005D1A2D /* Security.framework in Frameworks */,
 				C9B4FC3018A9A01100E5D011 /* CoreGraphics.framework in Frameworks */,
 				C9B4FC3218A9A01100E5D011 /* UIKit.framework in Frameworks */,
 				C9B4FC2E18A9A01100E5D011 /* Foundation.framework in Frameworks */,
@@ -180,6 +200,7 @@
 		C9B4FC2C18A9A01100E5D011 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				C9D567AA18EC5175005D1A2D /* Security.framework */,
 				C9B4FC2D18A9A01100E5D011 /* Foundation.framework */,
 				C9B4FC2F18A9A01100E5D011 /* CoreGraphics.framework */,
 				C9B4FC3118A9A01100E5D011 /* UIKit.framework */,
@@ -201,6 +222,8 @@
 				C9B4FC6318A9A20E00E5D011 /* BouncyFlowLayout.m */,
 				C9B4FC6818A9A4FA00E5D011 /* GraphListCell.h */,
 				C9B4FC6918A9A4FA00E5D011 /* GraphListCell.m */,
+				C91840EF18EC6B090072668A /* GraphListTableCell.h */,
+				C91840F018EC6B090072668A /* GraphListTableCell.m */,
 				C9B4FC6B18A9A54900E5D011 /* ArrayDataSource.h */,
 				C9B4FC6C18A9A54900E5D011 /* ArrayDataSource.m */,
 				C9B4FC3418A9A01100E5D011 /* Supporting Files */,
@@ -213,6 +236,8 @@
 				C9528C3218AAD6AA008E3F02 /* BarChart.m */,
 				C9528C3A18AE68C6008E3F02 /* MEPsLabel.h */,
 				C9528C3B18AE68C6008E3F02 /* MEPsLabel.m */,
+				C99CBD2D18DA1D2D009F8CBC /* EffortLabel.h */,
+				C99CBD2E18DA1D2D009F8CBC /* Effortlabel.m */,
 				C9528C3418AAD7B0008E3F02 /* GraphPoint.h */,
 				C9528C3518AAD7B0008E3F02 /* GraphPoint.m */,
 				C90E8D0518AE8A6100918C6A /* ScrollingImageVC.h */,
@@ -234,6 +259,11 @@
 		C9B4FC3418A9A01100E5D011 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				C9D567AF18EC57E0005D1A2D /* SSKeychain.h */,
+				C9D567B018EC57E0005D1A2D /* SSKeychain.m */,
+				C9D567B118EC57E0005D1A2D /* SSKeychainQuery.h */,
+				C9D567B218EC57E0005D1A2D /* SSKeychainQuery.m */,
+				C9885C2318C79AA400A11C03 /* _fromuikit_DisclosureArrow@2x.png */,
 				C9528C3718ABC0D1008E3F02 /* UIColor+RGB.h */,
 				C9528C3818ABC0D1008E3F02 /* UIColor+RGB.m */,
 				C9B4FC3C18A9A01100E5D011 /* AppDelegate.h */,
@@ -250,6 +280,8 @@
 				C90E8D0218AE80F300918C6A /* UILabel+SizeFontToFit.m */,
 				C90AADA218AEC25300EE36EA /* UIView+wrapper.h */,
 				C90AADA318AEC25300EE36EA /* UIView+wrapper.m */,
+				C99CBD2A18DA1CEC009F8CBC /* UIBezierPath+IOS7RoundedRect.h */,
+				C99CBD2B18DA1CEC009F8CBC /* UIBezierPath+IOS7RoundedRect.m */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -316,7 +348,7 @@
 		C9B4FC2218A9A01100E5D011 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0500;
+				LastUpgradeCheck = 0510;
 				ORGANIZATIONNAME = "Matthew Hillman";
 				TargetAttributes = {
 					C9B4FC4A18A9A01100E5D011 = {
@@ -350,6 +382,7 @@
 			files = (
 				C9B4FC4618A9A01100E5D011 /* Images.xcassets in Resources */,
 				C9B4FC3818A9A01100E5D011 /* InfoPlist.strings in Resources */,
+				C9885C2418C79AA400A11C03 /* _fromuikit_DisclosureArrow@2x.png in Resources */,
 				C9B4FC4118A9A01100E5D011 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -371,12 +404,15 @@
 			files = (
 				C90AADA418AEC25300EE36EA /* UIView+wrapper.m in Sources */,
 				C90E8D0718AE8A6100918C6A /* ScrollingImageVC.m in Sources */,
+				C99CBD2F18DA1D2D009F8CBC /* Effortlabel.m in Sources */,
+				C91840F118EC6B090072668A /* GraphListTableCell.m in Sources */,
 				C9528C2918AA84ED008E3F02 /* MZEvent.m in Sources */,
 				C9B4FC7018A9A74F00E5D011 /* MZQuery.m in Sources */,
 				C90AADAD18B5570600EE36EA /* CenteringScrollView.m in Sources */,
 				C9B4FC4418A9A01100E5D011 /* WorkoutVC.m in Sources */,
 				C90E8D0318AE80F300918C6A /* UILabel+SizeFontToFit.m in Sources */,
 				C9528C3618AAD7B0008E3F02 /* GraphPoint.m in Sources */,
+				C9D567B318EC57E0005D1A2D /* SSKeychain.m in Sources */,
 				C90AAD9E18AEAD6400EE36EA /* WorkoutHeading.m in Sources */,
 				C90AADAA18B50FF800EE36EA /* HorizontalScalingView.m in Sources */,
 				C9528C3C18AE68C6008E3F02 /* MEPsLabel.m in Sources */,
@@ -384,6 +420,7 @@
 				C9B4FC7318A9D7F100E5D011 /* LoginVC.m in Sources */,
 				C9528C2C18AAA952008E3F02 /* MZWorkout.m in Sources */,
 				C9B4FC3E18A9A01100E5D011 /* AppDelegate.m in Sources */,
+				C99CBD2C18DA1CEC009F8CBC /* UIBezierPath+IOS7RoundedRect.m in Sources */,
 				C9528C3018AAC473008E3F02 /* NSValue+MZValue.m in Sources */,
 				C9528C3318AAD6AA008E3F02 /* BarChart.m in Sources */,
 				C9B4FC6D18A9A54900E5D011 /* ArrayDataSource.m in Sources */,
@@ -391,6 +428,7 @@
 				C90AADA718B50DB300EE36EA /* ScrollingChartView.m in Sources */,
 				C9528C3918ABC0D1008E3F02 /* UIColor+RGB.m in Sources */,
 				C9B4FC6718A9A46B00E5D011 /* WorkoutListVC.m in Sources */,
+				C9D567B418EC57E0005D1A2D /* SSKeychainQuery.m in Sources */,
 				C9B4FC6A18A9A4FA00E5D011 /* GraphListCell.m in Sources */,
 				C9B4FC6418A9A20E00E5D011 /* BouncyFlowLayout.m in Sources */,
 				C9528C2518AA501E008E3F02 /* Logger.m in Sources */,
@@ -447,7 +485,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_INCLUDING_64_BIT)";
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
@@ -486,7 +523,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_INCLUDING_64_BIT)";
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
@@ -544,7 +580,6 @@
 		C9B4FC6018A9A01100E5D011 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_INCLUDING_64_BIT)";
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/MyZone.app/MyZone";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(SDKROOT)/Developer/Library/Frameworks",
@@ -567,7 +602,6 @@
 		C9B4FC6118A9A01100E5D011 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_INCLUDING_64_BIT)";
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/MyZone.app/MyZone";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(SDKROOT)/Developer/Library/Frameworks",

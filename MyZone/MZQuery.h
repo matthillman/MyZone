@@ -60,4 +60,10 @@
  * @return NSArray of MZWorkout in the time frame
  */
 + (void)getUserWorkoutsFrom:(NSDate *)start to:(NSDate *)end completionHandler:(void (^)(NSArray *workouts))completion;
+
++ (void)updateWorkout:(NSString *)hrhIndex activity:(NSString *)activityId completionHandler:(void (^)(id response))completion;
+
++ (MZZoneKey)zoneForAverageEffort:(NSString *)averageEffort;
+
+
 @end

@@ -27,6 +27,11 @@
     self.scrollView.minimumZoomScale = 0.2;
     self.scrollView.maximumZoomScale = 10;
     self.scrollView.delegate = self;
+}
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [self willRotateToInterfaceOrientation:self.interfaceOrientation duration:0.25f];
     [self updateZoom];
 }
 

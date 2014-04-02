@@ -9,5 +9,5 @@
 #import <UIKit/UIKit.h>
 
 @interface BouncyFlowLayout : UICollectionViewFlowLayout
-
+@property (assign, nonatomic) CGFloat scrollResistance;
 @end

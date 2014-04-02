@@ -19,6 +19,7 @@
 @property (strong, nonatomic) UIImage *chart;
 @property (assign, nonatomic) CGSize chartSize;
 @property (readonly, nonatomic) CGSize originalSize;
+@property (strong, nonatomic) NSLayoutConstraint *labelWidth;
 @end
 
 @implementation ScrollingChartView
@@ -47,14 +48,34 @@
 - (void)setFrame:(CGRect)frame
 {
     [super setFrame:frame];
-    [self redrawImagesForce:YES];
+    if (self.chart) {
+        [self redrawImagesForce:YES];
+    }
 }
 
 - (void)setup
 {
-    self.chartSize = self.bounds.size;
     [self addSubview:self.labelsView];
     [self addSubview:self.scrollView];
+    self.labelsView.translatesAutoresizingMaskIntoConstraints = NO;
+    self.scrollView.translatesAutoresizingMaskIntoConstraints = NO;
+    NSDictionary *views = @{@"label": self.labelsView, @"chart": self.scrollView};
+    [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[label][chart]|"
+                                                                options:NSLayoutFormatAlignAllTop|NSLayoutFormatAlignAllBottom
+                                                                 metrics:nil
+                                                                   views:views]];
+    [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[label]|"
+                                                                 options:0
+                                                                 metrics:nil
+                                                                   views:views]];
+    self.labelWidth = [NSLayoutConstraint constraintWithItem:self.labelsView
+                                                   attribute:NSLayoutAttributeWidth
+                                                   relatedBy:NSLayoutRelationEqual
+                                                      toItem:nil
+                                                   attribute:NSLayoutAttributeNotAnAttribute
+                                                  multiplier:1
+                                                    constant:21];
+    
     [self.scrollView addSubview:self.imageView];
     self.imageView.backgroundColor = [UIColor whiteColor];
     self.scrollView.bouncesZoom = NO;
@@ -71,6 +92,12 @@
     singleTapGestureRecognizer.numberOfTapsRequired = 1;
     [singleTapGestureRecognizer requireGestureRecognizerToFail: doubleTapGestureRecognizer];
     [self addGestureRecognizer:singleTapGestureRecognizer];
+}
+
+- (void)setBounds:(CGRect)bounds
+{
+    [super setBounds:bounds];
+    self.chartSize = self.bounds.size;
 }
 
 - (void)redrawImages
@@ -118,10 +145,16 @@
     self.scrollView.contentOffset = offset;
 }
 
-- (void)toggleZoom:(id)sender
+- (void)toggleZoom:(UITapGestureRecognizer *)sender
 {
+    CGPoint tapLocation = [sender locationInView:self];
     CGFloat scale = self.chartSize.width == self.originalSize.width ? self.scrollView.maximumZoomScale : self.scrollView.minimumZoomScale;
     [self.scrollView setZoomScale:scale animated:YES];
+    [self.scrollView scrollRectToVisible:CGRectMake((tapLocation.x - CGRectGetWidth(self.bounds)/2) * scale,
+                                                    0,
+                                                    CGRectGetWidth(self.bounds),
+                                                    CGRectGetHeight(self.bounds))
+                                animated:YES];
 }
 
 - (void)fireTargetAction:(id)sender
@@ -212,9 +245,15 @@
 - (void)setLabels:(UIImage *)labels
 {
     self.labelsView.image = labels;
-    self.labelsView.frame = CGRectMake(0, 0, labels.size.width, CGRectGetHeight(self.bounds));
-    self.scrollView.frame = CGRectMake(CGRectGetWidth(self.labelsView.frame), 0,
-                                       CGRectGetWidth(self.bounds) - CGRectGetWidth(self.labelsView.frame), CGRectGetHeight(self.bounds));
+    self.labelWidth.constant = labels.size.width;
+}
+
+- (void)layoutSubviews
+{
+    [super layoutSubviews];
+    [self redrawImages];
+    [self updateZoom];
+    [self.scrollView setZoomScale:self.scrollView.minimumZoomScale animated:YES];
 }
 
 @end

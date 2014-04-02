@@ -10,7 +10,7 @@
 #import "MZEvent.h"
 #import "MZWorkout.h"
 #import <CommonCrypto/CommonDigest.h>
-
+#import "SSKeychain.h"
 
 enum {
 	MZRequestTypeLogin   = 1,
@@ -31,6 +31,8 @@ enum {
 typedef NSUInteger MZRequestType;
 
 #define GUID @"GUID"
+#define USER @"USER"
+#define MYZONE @"mz"
 
 @implementation MZQuery
 
@@ -41,8 +43,11 @@ typedef NSUInteger MZRequestType;
     NSUserDefaults *standardUserDefaults = [NSUserDefaults standardUserDefaults];
     [standardUserDefaults setObject:result[GUID] forKey:GUID];
     [standardUserDefaults setObject:result[@"coachGUID"] forKey:@"coachGUID"];
+    [standardUserDefaults setObject:user forKey:USER];
     [standardUserDefaults synchronize];
-
+    
+    [SSKeychain setPassword:password forService:MYZONE account:user];
+    
     return YES;
 }
 
@@ -93,6 +98,15 @@ typedef NSUInteger MZRequestType;
 
 }
 
++ (MZZoneKey)zoneForAverageEffort:(NSString *)averageEffort
+{
+    NSNumberFormatter *f = [[NSNumberFormatter alloc] init];
+    f.numberStyle = NSNumberFormatterPercentStyle;
+    NSNumber *z = [f numberFromString:averageEffort];
+    NSUInteger result = floor([z doubleValue] * 10) - 4;
+    return MAX(result, 0);
+}
+
 #pragma mark Private Methods
 
 /**
@@ -105,18 +119,23 @@ typedef NSUInteger MZRequestType;
 + (void)query:(MZRequestType)type withParameters:(NSDictionary *)parameters completionHandler:(void (^)(id response))completion
 {
     static NSString *url = @"http://myzonemoves.com/myzone/mobile/";
-    static NSString *query = @"?%@";
-    
-    NSMutableURLRequest *request = [[NSMutableURLRequest alloc] init];
-    [request setHTTPMethod:@"GET"];
-    
-    NSString *get = [NSString stringWithFormat:@"requestType=%d", type];
-    
+
+    NSString *get = [NSString stringWithFormat:@"requestType=%lu", (unsigned long)type];
     for (NSString *key in parameters) {
         get = [get stringByAppendingString:[NSString stringWithFormat:@"&%@=%@", key, parameters[key]]];
     }
-    LogDebug(@"query string: %@", get);
-    NSURL *reqUrl = [NSURL URLWithString:[NSString stringWithFormat:@"%@%@", url, [NSString stringWithFormat:query, [get stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]]]];
+
+    [MZQuery queryUrl:url withQueryString:get completion:completion];
+}
+
++ (void)queryUrl:(NSString *)url withQueryString:(NSString *)queryString completion:(void (^)(id response))completion
+{
+    static NSString *query = @"?%@";
+    NSMutableURLRequest *request = [[NSMutableURLRequest alloc] init];
+    NSString *formatted = queryString ? [NSString stringWithFormat:query, [queryString stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]] : @"";
+    [request setHTTPMethod:@"GET"];
+   
+    NSURL *reqUrl = [NSURL URLWithString:[NSString stringWithFormat:@"%@%@", url, formatted]];
     request.URL = reqUrl;
     
     NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration ephemeralSessionConfiguration];
@@ -129,8 +148,101 @@ typedef NSUInteger MZRequestType;
                 NSData *jsonData = [jsonResult dataUsingEncoding:NSUTF8StringEncoding];
                 NSError *e;
                 id res = [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:&e];
-                
+                if (e != nil) {
+                    if (e.code == 3840) {
+                        res = jsonResult;
+                    } else {
+                        LogError(@"Error decoding json\n%@\nwith error\n%@", jsonResult, e);
+                    }
+                }
                 dispatch_async(dispatch_get_main_queue(), ^{ completion(res); });
+            }
+        } else {
+            LogError(@"Error retrieving query from MyZone:\n%@", error);
+        }
+    }];
+    
+    [task resume];
+}
+
++ (void)updateWorkout:(NSString *)hrhIndex activity:(NSString *)activityId completionHandler:(void (^)(id response))completion
+{
+    static NSString *url = @"http://myzonemoves.com/myzone/dashboard/sections/saveactivity.php";
+    static NSString *query = @"?actIndex=%@&hrhIndex=%@";
+    
+    [MZQuery loginToFullSiteWithCompletion:^(NSURLSession *session, NSDictionary *cookies) {
+        NSMutableURLRequest *request = [[NSMutableURLRequest alloc] init];
+        [request setHTTPMethod:@"GET"];
+        NSString *formatted = [[NSString stringWithFormat:query, activityId, hrhIndex] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+        NSURL *reqUrl = [NSURL URLWithString:[NSString stringWithFormat:@"%@%@", url, formatted]];
+        request.URL = reqUrl;
+        
+        [request setAllHTTPHeaderFields:cookies];
+        
+        NSURLSessionDownloadTask *task = [session downloadTaskWithRequest:request completionHandler:^(NSURL *localFile, NSURLResponse *response, NSError *error) {
+            if (!error) {
+                if ([request.URL isEqual:reqUrl]) {
+                    NSString *jsonResult = [[NSString alloc] initWithData:[NSData dataWithContentsOfURL:localFile] encoding:NSUTF8StringEncoding];
+                    
+                    NSData *jsonData = [jsonResult dataUsingEncoding:NSUTF8StringEncoding];
+                    NSError *e;
+                    id res = [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:&e];
+                    if (e != nil) {
+                        if (e.code == 3840) {
+                            res = jsonResult;
+                        } else {
+                            LogError(@"Error decoding json\n%@\nwith error\n%@", jsonResult, e);
+                        }
+                    }
+                    dispatch_async(dispatch_get_main_queue(), ^{ completion(res); });
+                }
+            } else {
+                LogError(@"Error retrieving query from MyZone:\n%@", error);
+            }
+        }];
+        
+        [task resume];
+    }];
+}
+
++ (void)loginToFullSiteWithCompletion:(void (^)(NSURLSession *session, NSDictionary *cookies))completion
+{
+    NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration defaultSessionConfiguration];
+    NSURLSession *session = [NSURLSession sessionWithConfiguration:configuration];
+    
+    NSMutableURLRequest *request2 = [[NSMutableURLRequest alloc] init];
+    [request2 setHTTPMethod:@"GET"];
+    
+    NSURL *reqUrl2 = [NSURL URLWithString:@"http://myzonemoves.com/index.php"];
+    request2.URL = reqUrl2;
+    NSURLSessionDownloadTask *task = [session downloadTaskWithRequest:request2 completionHandler:^(NSURL *localFile, NSURLResponse *response, NSError *error) {
+        if (!error) {
+            if ([request2.URL isEqual:reqUrl2]) {
+                NSMutableURLRequest *request = [[NSMutableURLRequest alloc] init];
+                NSString *username = [[NSUserDefaults standardUserDefaults] valueForKey:USER];
+                NSString *password = [SSKeychain passwordForService:MYZONE account:username];
+                NSString *formatted = [[NSString stringWithFormat:@"email=%@&password=%@&login=Log+In", username, password]
+                                       stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+                [request setHTTPMethod:@"POST"];
+                
+                NSURL *reqUrl = [NSURL URLWithString:@"http://myzonemoves.com/myzone/login/"];
+                request.URL = reqUrl;
+                
+                NSData *postData = [formatted dataUsingEncoding:NSASCIIStringEncoding allowLossyConversion:YES];
+                NSDictionary *cookieHeaders = [NSHTTPCookie requestHeaderFieldsWithCookies:[[NSHTTPCookieStorage sharedHTTPCookieStorage] cookiesForURL:reqUrl]];
+                [request setAllHTTPHeaderFields:cookieHeaders];
+                
+                NSURLSessionUploadTask *utask = [session uploadTaskWithRequest:request fromData:postData completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+                    if (!error) {
+                        if ([request.URL isEqual:reqUrl]) {
+                            dispatch_async(dispatch_get_main_queue(), ^{ completion(session, cookieHeaders); });
+                        }
+                    } else {
+                        LogError(@"Error retrieving query from MyZone:\n%@", error);
+                    }
+                }];
+                
+                [utask resume];
             }
         } else {
             LogError(@"Error retrieving query from MyZone:\n%@", error);
@@ -155,7 +267,7 @@ typedef NSUInteger MZRequestType;
     NSMutableURLRequest *request = [[NSMutableURLRequest alloc] init];
     [request setHTTPMethod:@"GET"];
     
-    NSString *get = [NSString stringWithFormat:@"requestType=%d", type];
+    NSString *get = [NSString stringWithFormat:@"requestType=%lu", (unsigned long)type];
     
     for (NSString *key in parameters) {
         get = [get stringByAppendingString:[NSString stringWithFormat:@"&%@=%@", key, parameters[key]]];
@@ -191,7 +303,7 @@ typedef NSUInteger MZRequestType;
 {
     const char *cStr = [input UTF8String];
     unsigned char digest[16];
-    CC_MD5(cStr, strlen(cStr), digest); // This is the md5 call
+    CC_MD5(cStr, (int)strlen(cStr), digest); // This is the md5 call
     
     NSMutableString *output = [NSMutableString stringWithCapacity:CC_MD5_DIGEST_LENGTH * 2];
     

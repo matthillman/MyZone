@@ -8,6 +8,8 @@
 
 #import <UIKit/UIKit.h>
 
+@class MZWorkout;
+
 @interface WorkoutHeading : UICollectionReusableView
 @property (weak, nonatomic) IBOutlet UILabel *dateTimeLabel;
 @property (weak, nonatomic) IBOutlet UILabel *durationLabel;
@@ -20,4 +22,6 @@
                targetZone:(TZRange)zone
                     maxHr:(NSNumber *)max
                  duration:(NSString *)duration;
+
+- (void)configureWithWorkout:(MZWorkout *)workout;
 @end

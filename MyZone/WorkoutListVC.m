@@ -10,11 +10,11 @@
 #import "MZQuery.h"
 #import "MZEvent.h"
 #import "ArrayDataSource.h"
-#import "GraphListCell.h"
+#import "GraphListTableCell.h"
 #import "WorkoutVC.h"
 #import "MZWorkout.h"
 
-static NSString *const WorkoutCellIdentifier = @"Workout Cell";
+static NSString *const WorkoutCellIdentifier = @"Workout List Cell";
 
 @interface WorkoutListVC ()
 @property (strong, nonatomic) IBOutlet ArrayDataSource *dataSource;
@@ -25,29 +25,34 @@ static NSString *const WorkoutCellIdentifier = @"Workout Cell";
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-	// Do any additional setup after loading the view.
+
     if ([LoginVC isLoggedIn]) {
         [self setup];
     }
+    
+    self.navigationItem.title = @"Workouts";    
+    self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
 }
-- (IBAction)refresh:(UIBarButtonItem *)sender
+
+- (IBAction)refresh:(id)sender
 {
     [self setup];
 }
 
 - (void)setup
 {
+    [self.refreshControl beginRefreshing];
 //    [MZQuery getUserProfile];
     NSDate *s = [NSDate date];
     NSDateComponents *comp = [[NSDateComponents alloc] init];
-    comp.month = -1;
+    comp.month = -2;
     s = [[NSCalendar currentCalendar] dateByAddingComponents:comp toDate:[NSDate date] options:0];
     
     NSSortDescriptor *descriptor = [[NSSortDescriptor alloc] initWithKey:@"start" ascending:NO];
     NSSortDescriptor *descriptor2 = [[NSSortDescriptor alloc] initWithKey:@"end" ascending:NO];
     
     [MZQuery getUserEventsFrom:s to:[NSDate date] completionHandler:^(NSArray *events) {
-        [self.dataSource configureForItems:@[] cellIdentifier:WorkoutCellIdentifier configureCellBlock:^(GraphListCell *cell, MZWorkout *workout) {
+        [self.dataSource configureForItems:@[] cellIdentifier:WorkoutCellIdentifier configureCellBlock:^(GraphListTableCell *cell, MZWorkout *workout) {
             [cell configureForWorkout:workout];
         }];
         
@@ -58,10 +63,12 @@ static NSString *const WorkoutCellIdentifier = @"Workout Cell";
                 }
                 NSArray *unsorted = [self.dataSource.items arrayByAddingObjectsFromArray:workouts];
                 self.dataSource.items = [unsorted sortedArrayUsingDescriptors:@[descriptor, descriptor2]];
-                [self.collectionView reloadData];
+                [self.tableView reloadData];
             }];
         }
-    }];    
+    }];
+    
+    [self.refreshControl endRefreshing];
 }
 
 - (void)loginSuccess
@@ -74,8 +81,28 @@ static NSString *const WorkoutCellIdentifier = @"Workout Cell";
 {
     if ([segue.identifier isEqualToString:@"show workout"]) {
         WorkoutVC *vc = (WorkoutVC *)segue.destinationViewController;
-        vc.workout = ((GraphListCell *)sender).workout;
+        vc.workout = ((GraphListTableCell *)sender).workout;
     }
 }
 
+- (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration
+{
+    [super willRotateToInterfaceOrientation:toInterfaceOrientation duration:duration];
+    [UIView beginAnimations:nil context:NULL];
+    [UIView setAnimationDuration:duration];
+    for (GraphListTableCell *cell in self.tableView.visibleCells) {
+        [cell updateLayout:toInterfaceOrientation];
+    }
+    [self.view layoutIfNeeded];
+    [UIView commitAnimations];
+}
+
+- (void)updateViewConstraints
+{
+    [super updateViewConstraints];
+    
+    for (GraphListTableCell *cell in self.tableView.visibleCells) {
+        [cell updateLayout:self.interfaceOrientation];
+    }
+}
 @end

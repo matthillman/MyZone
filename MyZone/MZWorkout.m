@@ -10,6 +10,7 @@
 #import "GraphPoint.h"
 #import "BarChart.h"
 #import "MEPsLabel.h"
+#import "EffortLabel.h"
 
 @interface MZWorkout () <NSCopying>
 
@@ -66,15 +67,16 @@
     NSMutableDictionary *acts = [@{} mutableCopy];
     NSMutableDictionary *effortsByActivity = [@{} mutableCopy];
     for (zone = zones.location; zone < zones.length; ++zone) {
-        NSArray *data = jsonWorkout[[NSString stringWithFormat:@"effort%u", zone]];
+        NSArray *data = jsonWorkout[[NSString stringWithFormat:@"effort%lu", (unsigned long)zone]];
         if ([data[0] isKindOfClass:[NSArray class]]) { // if this isn’t a list of arrays, then there is no data in this zone
             for (NSArray *item in data) {
+                NSString *actKey = [NSString stringWithFormat:@"%@-%@-%@", item[2], item[3], item[4]];
                 MZPoint p = MZPointMake(floor([item[0] doubleValue] / 1000), [item[1] integerValue], zone);
-                if (!effortsByActivity[item[2]]) effortsByActivity[item[2]] = [@{} mutableCopy];
-                NSArray *zoneData = effortsByActivity[item[2]][@(zone)] ?: @[];
+                if (!effortsByActivity[actKey]) effortsByActivity[actKey] = [@{} mutableCopy];
+                NSArray *zoneData = effortsByActivity[actKey][@(zone)] ?: @[];
                 zoneData = [zoneData arrayByAddingObject:[NSValue valueWithMZPoint:p]];
-                effortsByActivity[item[2]][@(zone)] = zoneData;
-                acts[item[2]] = @{@"start": item[3], @"end": item[4]};
+                effortsByActivity[actKey][@(zone)] = zoneData;
+                acts[actKey] = @{@"name": item[2], @"start": item[3], @"end": item[4]};
             }
         }
     }
@@ -96,9 +98,8 @@
     
     NSDateFormatter *dateFormat = [[NSDateFormatter alloc] init];
     [dateFormat setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
-    NSInteger i = 1;
+
     for (NSString *activity in acts) {
-        workout.activity = activity;
         workout.start = [dateFormat dateFromString:workout.startString];
         workout.end = [dateFormat dateFromString:workout.endString];
         NSInteger peakHr = 0;
@@ -120,18 +121,58 @@
                 MZPoint p = [v mzPointValue];
                 peakHr = MAX(peakHr, p.effort);
             }
-            SEL set = NSSelectorFromString([NSString stringWithFormat:@"setEffortInZone%u:", zone]);
+            SEL set = NSSelectorFromString([NSString stringWithFormat:@"setEffortInZone%lu:", (unsigned long)zone]);
             IMP setImp = [workout methodForSelector:set];
             void (*setFunc)(id, SEL, NSArray *) = (void *)setImp;
             setFunc(workout, set, data);
         }
         
-        workout.move = @(i);
-        
         workout.peakHeartRate = @(peakHr);
         
         [ret addObject:[workout copy]];
-        i++;
+    }
+    
+    NSSortDescriptor *descriptor = [[NSSortDescriptor alloc] initWithKey:@"start" ascending:YES];
+    NSArray *sorted = [ret sortedArrayUsingDescriptors:@[descriptor]];
+    
+    NSError *error = NULL, *optError = NULL;
+    NSRegularExpression *selectRegex = nil, *optionRegex = nil;
+    NSTextCheckingResult *match = nil;
+    
+    optionRegex = [NSRegularExpression regularExpressionWithPattern:@"<option.+?value='(.+?)'.*?>(.+?)</option>" options:0 error:&optError];
+    
+    for (MZWorkout *w in sorted) {
+        NSUInteger i = [sorted indexOfObject:w];
+        w.move = @(i+1);
+        w.hrhIndex = jsonWorkout[@"actlist"][i][@"value"];
+        w.activity = jsonWorkout[@"actlist"][i][@"name"];
+        selectRegex = [NSRegularExpression regularExpressionWithPattern:[NSString stringWithFormat:@"<select.+?selActivity%@.+?>(.+?)</select>", w.hrhIndex]
+                                                                options:0
+                                                                  error:&error];
+        if (error != NULL) {
+            LogError(@"%@", [error debugDescription]);
+        }
+        match = [selectRegex firstMatchInString:jsonWorkout[@"activities"]
+                                        options:0
+                                          range:NSMakeRange(0, [jsonWorkout[@"activities"] length])];
+        if (match) {
+            NSMutableArray *activityList = [NSMutableArray array];
+            [optionRegex enumerateMatchesInString:jsonWorkout[@"activities"]
+                                          options:0
+                                            range:[match rangeAtIndex:1]
+                                       usingBlock:^(NSTextCheckingResult *result, NSMatchingFlags flags, BOOL *stop)
+             {
+                 NSString *val = [jsonWorkout[@"activities"] substringWithRange:[result rangeAtIndex:1]];
+                 NSString *label = [jsonWorkout[@"activities"] substringWithRange:[result rangeAtIndex:2]];
+                 [activityList addObject:@{@"value": val, @"label": label}];
+            }];
+            
+            if (optError != NULL) {
+                LogError(@"%@", [optError debugDescription]);
+            }
+            
+            w.activityList = [activityList sortedArrayUsingDescriptors:@[[NSSortDescriptor sortDescriptorWithKey:@"label" ascending:YES]]];
+        }
     }
     
     return ret;
@@ -152,7 +193,7 @@
     
     for (NSValue *v in self.effort) {
         MZPoint p = [v mzPointValue];
-        [points addObject:[[GraphPoint alloc] initWithPoint:CGPointMake(p.time, p.effort) category:[NSString stringWithFormat:@"%d", p.zone]]];
+        [points addObject:[[GraphPoint alloc] initWithPoint:CGPointMake(p.time, p.effort) category:[NSString stringWithFormat:@"%lu", (unsigned long)p.zone]]];
     }
     
     return points;
@@ -163,12 +204,12 @@
     if (!_grapher) {
         _grapher = [[BarChart alloc] init];
         _grapher.yRange = NSMakeRange(0, 100);
-        _grapher.colors = @{@"0": @{@"fill": [UIColor colorForHex:0xbbbbbb]},
-                            @"1": @{@"fill": [UIColor colorForHex:0x75777a]},
-                            @"2": @{@"fill": [UIColor colorForHex:0x3b54a5]},
-                            @"3": @{@"fill": [UIColor colorForHex:0x0c8b44]},
-                            @"4": @{@"fill": [UIColor colorForHex:0xfff200]},
-                            @"5": @{@"fill": [UIColor colorForHex:0xed2024]}};
+        _grapher.colors = @{@"0": @{@"fill": [UIColor fillColorForZone:MZZone0]},
+                            @"1": @{@"fill": [UIColor fillColorForZone:MZZone1]},
+                            @"2": @{@"fill": [UIColor fillColorForZone:MZZone2]},
+                            @"3": @{@"fill": [UIColor fillColorForZone:MZZone3]},
+                            @"4": @{@"fill": [UIColor fillColorForZone:MZZone4]},
+                            @"5": @{@"fill": [UIColor fillColorForZone:MZZone5]}};
     }
     
     NSArray *p = self.graphPoints;
@@ -203,15 +244,15 @@
     NSMutableArray *ret = [@[] mutableCopy];
     CGRect subLabelFrame = CGRectMake(0, 0, 100, 30);
     UIFont *labelFont = [UIFont fontWithName:@"AvenirNext" size:14];
+    
     MEPsLabel *mepsLabel = [[MEPsLabel alloc] initWithFrame:subLabelFrame];
     mepsLabel.MEPs = self.meps;
     mepsLabel.backgroundColor = [UIColor whiteColor];
     [ret addObject:@{@"title": @"MEPs", @"view": [UIView viewWrappingSubview:mepsLabel]}];
     
-    UILabel *effortLabel = [[UILabel alloc] initWithFrame:subLabelFrame];
-    effortLabel.text = [NSString stringWithFormat:@"%@", self.averageEffort];
-    effortLabel.textAlignment = NSTextAlignmentCenter;
-    effortLabel.font = labelFont;
+    EffortLabel *effortLabel = [[EffortLabel alloc] initWithFrame:subLabelFrame];
+    effortLabel.averageEffort = self.averageEffort;
+    effortLabel.backgroundColor = [UIColor whiteColor];
     [ret addObject:@{@"title": @"Avg Effort", @"view": [UIView viewWrappingSubview:effortLabel]}];
     
     UILabel *calLabel = [[UILabel alloc] initWithFrame:subLabelFrame];
@@ -233,7 +274,7 @@
     [ret addObject:@{@"title": @"Avg Heart Rate", @"view": [UIView viewWrappingSubview:avgHr]}];
     
     UILabel *peakHr = [[UILabel alloc] initWithFrame:subLabelFrame];
-    peakHr.text = [NSString stringWithFormat:@"%@", self.peakHeartRate];
+    peakHr.text = [NSString stringWithFormat:@"%@%%", self.peakHeartRate];
     peakHr.textAlignment = NSTextAlignmentCenter;
     peakHr.font = labelFont;
     [ret addObject:@{@"title": @"Peak Heart Rate", @"view": [UIView viewWrappingSubview:peakHr]}];

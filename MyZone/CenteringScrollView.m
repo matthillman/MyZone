@@ -26,7 +26,7 @@
     
     // center vertically
     if (frameToCenter.size.height < boundsSize.height)
-        frameToCenter.origin.y = ((boundsSize.height - frameToCenter.size.height) / 2) - (frameToCenter.size.height / 4);
+        frameToCenter.origin.y = (boundsSize.height - frameToCenter.size.height) / 4;
     else
         frameToCenter.origin.y = 0;
     

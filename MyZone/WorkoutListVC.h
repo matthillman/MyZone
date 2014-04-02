@@ -9,6 +9,6 @@
 #import <UIKit/UIKit.h>
 #import "LoginVC.h"
 
-@interface WorkoutListVC : UICollectionViewController <MZLoginDelegate>
+@interface WorkoutListVC : UITableViewController <MZLoginDelegate>
 
 @end
