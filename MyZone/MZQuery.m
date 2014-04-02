@@ -141,6 +141,7 @@ typedef NSUInteger MZRequestType;
     NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration ephemeralSessionConfiguration];
     NSURLSession *session = [NSURLSession sessionWithConfiguration:configuration];
     NSURLSessionDownloadTask *task = [session downloadTaskWithRequest:request completionHandler:^(NSURL *localFile, NSURLResponse *response, NSError *error) {
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
         if (!error) {
             if ([request.URL isEqual:reqUrl]) {
                 NSString *jsonResult = [[NSString alloc] initWithData:[NSData dataWithContentsOfURL:localFile] encoding:NSUTF8StringEncoding];
@@ -162,6 +163,8 @@ typedef NSUInteger MZRequestType;
         }
     }];
     
+    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
+    
     [task resume];
 }
 
@@ -180,6 +183,7 @@ typedef NSUInteger MZRequestType;
         [request setAllHTTPHeaderFields:cookies];
         
         NSURLSessionDownloadTask *task = [session downloadTaskWithRequest:request completionHandler:^(NSURL *localFile, NSURLResponse *response, NSError *error) {
+            [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
             if (!error) {
                 if ([request.URL isEqual:reqUrl]) {
                     NSString *jsonResult = [[NSString alloc] initWithData:[NSData dataWithContentsOfURL:localFile] encoding:NSUTF8StringEncoding];
@@ -201,6 +205,7 @@ typedef NSUInteger MZRequestType;
             }
         }];
         
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
         [task resume];
     }];
 }
@@ -233,6 +238,7 @@ typedef NSUInteger MZRequestType;
                 [request setAllHTTPHeaderFields:cookieHeaders];
                 
                 NSURLSessionUploadTask *utask = [session uploadTaskWithRequest:request fromData:postData completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+                    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
                     if (!error) {
                         if ([request.URL isEqual:reqUrl]) {
                             dispatch_async(dispatch_get_main_queue(), ^{ completion(session, cookieHeaders); });
@@ -249,6 +255,7 @@ typedef NSUInteger MZRequestType;
         }
     }];
     
+    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
     [task resume];
 }
 
@@ -279,9 +286,11 @@ typedef NSUInteger MZRequestType;
     
     NSHTTPURLResponse *response = nil;
     NSError *error = [[NSError alloc] init];
+    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
     NSData *responseData = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:&error];
     NSString *jsonResult = [[NSString alloc] initWithData:responseData encoding:NSUTF8StringEncoding];
-
+    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    
     if ([response statusCode] >= 200 && [response statusCode] < 300) {
         NSData *jsonData = [jsonResult dataUsingEncoding:NSUTF8StringEncoding];
         NSError *e;
