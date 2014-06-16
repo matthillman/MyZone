@@ -20,4 +20,17 @@
     [self getValue:&p];
     return p;
 }
+
++ (NSValue *)valueWithTZRange:(TZRange)range
+{
+    return [NSValue value:&range withObjCType:@encode(TZRange)];
+}
+
+- (TZRange)tzRangeValue
+{
+    TZRange r;
+    [self getValue:&r];
+    return r;
+}
+
 @end

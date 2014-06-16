@@ -8,8 +8,9 @@
 
 #import <UIKit/UIKit.h>
 
-@class MZWorkout;
+@class Workout;
 
 @interface WorkoutVC : UIViewController
-@property (strong, nonatomic) MZWorkout *workout;
+@property (strong, nonatomic) Workout *workout;
+@property (strong, nonatomic) NSArray *activityList;
 @end

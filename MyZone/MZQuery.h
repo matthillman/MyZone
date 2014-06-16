@@ -19,7 +19,7 @@
  * @return YES if the login is successful, NO otherwise
  */
 + (BOOL)loginUser:(NSString *)user password:(NSString *)password;
-
++ (NSString *)loggedInId;
 /**
  * Check if a user is logged in already
  *
@@ -50,7 +50,7 @@
  * @param event MZEvent to use for the query
  * @return NSArray of MZWorkout in the time frame
  */
-+ (void)getUserWorkoutsForEvent:(MZEvent *)event completionHandler:(void (^)(NSArray *workouts))completion;
++ (void)getUserWorkoutsForEvent:(MZEvent *)event inContext:(NSManagedObjectContext *)context completionHandler:(void (^)(NSArray *workouts))completion;
 /**
  * Gets the workouts in the given date range. Only the day, month and year portion of the dates are used.
  *
@@ -59,11 +59,17 @@
  * @param end End date of range
  * @return NSArray of MZWorkout in the time frame
  */
-+ (void)getUserWorkoutsFrom:(NSDate *)start to:(NSDate *)end completionHandler:(void (^)(NSArray *workouts))completion;
++ (void)getUserWorkoutsFrom:(NSDate *)start to:(NSDate *)end inContext:(NSManagedObjectContext *)context completionHandler:(void (^)(NSArray *workouts))completion;
 
-+ (void)updateWorkout:(NSString *)hrhIndex activity:(NSString *)activityId completionHandler:(void (^)(id response))completion;
++ (void)updateWorkout:(NSNumber *)hrhIndex activity:(NSString *)activityId completionHandler:(void (^)(id response))completion;
++ (void)doWorkoutQueryInContext:(NSManagedObjectContext *)context all:(BOOL)all completion:(void (^)(BOOL newData))completion;
+
++ (id)sharedQuery;
+- (void)doWorkoutQueryInContext:(NSManagedObjectContext *)context all:(BOOL)all;
+- (void)getUserWorkoutsForEvent:(MZEvent *)event;
 
 + (MZZoneKey)zoneForAverageEffort:(NSString *)averageEffort;
++ (id)processResult:(NSURL *)localFile;
 
 
 @end

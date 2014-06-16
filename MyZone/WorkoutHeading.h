@@ -8,7 +8,7 @@
 
 #import <UIKit/UIKit.h>
 
-@class MZWorkout;
+@class Workout;
 
 @interface WorkoutHeading : UICollectionReusableView
 @property (weak, nonatomic) IBOutlet UILabel *dateTimeLabel;
@@ -23,5 +23,5 @@
                     maxHr:(NSNumber *)max
                  duration:(NSString *)duration;
 
-- (void)configureWithWorkout:(MZWorkout *)workout;
+- (void)configureWithWorkout:(Workout *)workout;
 @end

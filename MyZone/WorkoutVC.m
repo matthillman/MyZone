@@ -9,7 +9,8 @@
 #import "WorkoutVC.h"
 #import "MEPsLabel.h"
 #import "ArrayDataSource.h"
-#import "MZWorkout.h"
+#import "Workout+MZ.h"
+#import "Activity+MZ.h"
 #import "ScrollingImageVC.h"
 #import "WorkoutHeading.h"
 #import "WorkoutCell.h"
@@ -37,15 +38,15 @@ static NSString *const CellIdentifier = @"Workout Cell";
     
     self.titleButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
     self.titleButton.titleLabel.font = [UIFont fontWithName:@"AvenirNext-Regular" size:17];
-    [self.titleButton setTitle:self.workout.activity forState:UIControlStateNormal];
+    [self.titleButton setTitle:self.workout.activityName forState:UIControlStateNormal];
     [self.titleButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
     [self.titleButton addTarget:self action:@selector(showActions) forControlEvents:UIControlEventTouchUpInside];
     [self.titleButton sizeToFit];
     self.navigationItem.titleView = self.titleButton;
     
     
-    self.chartView.colors = self.workout.grapher.colors;
-    self.chartView.points = self.workout.grapher.points;
+    self.chartView.colors = [UIColor fillColors];
+    self.chartView.points = self.workout.graphPoints;
     
     self.chartView.target = self;
     self.chartView.action = @selector(showChart);
@@ -65,8 +66,8 @@ static NSString *const CellIdentifier = @"Workout Cell";
 - (void)showActions
 {
     UIActionSheet *activitySheet = [[UIActionSheet alloc] initWithTitle:@"Change Activity for Workout" delegate:self cancelButtonTitle:nil destructiveButtonTitle:nil otherButtonTitles:nil];
-    for (NSDictionary *act in self.workout.activityList) {
-        [activitySheet addButtonWithTitle:act[@"label"]];
+    for (Activity *act in self.activityList) {
+        [activitySheet addButtonWithTitle:act.label];
     }
     [activitySheet addButtonWithTitle:@"Cancel"];
     activitySheet.cancelButtonIndex = activitySheet.numberOfButtons-1;
@@ -80,12 +81,14 @@ static NSString *const CellIdentifier = @"Workout Cell";
         UIActivityIndicatorView *spinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
         [spinner startAnimating];
         self.navigationItem.titleView = spinner;
-        [MZQuery updateWorkout:self.workout.hrhIndex activity:self.workout.activityList[buttonIndex][@"value"] completionHandler:^(id response) {
-            NSString *selectedActivity = (NSString *)response;
-            [self.titleButton setTitle:selectedActivity forState:UIControlStateNormal];
+        [MZQuery updateWorkout:self.workout.hrhIndex activity:[(Activity *)self.activityList[buttonIndex] value] completionHandler:^(id response) {
+            Activity *selectedActivity = self.activityList[buttonIndex];
+            [self.titleButton setTitle:selectedActivity.label forState:UIControlStateNormal];
             [self.titleButton sizeToFit];
             self.navigationItem.titleView = self.titleButton;
-            self.workout.activity = selectedActivity;
+            [self.workout.managedObjectContext performBlock:^{
+                self.workout.activity = selectedActivity;
+            }];
         }];
     }
 }

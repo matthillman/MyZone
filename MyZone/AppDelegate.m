@@ -7,14 +7,29 @@
 //
 
 #import "AppDelegate.h"
+#import "AppDelegate+MDC.h"
 #import "LoginVC.h"
 #import "WorkoutListVC.h"
+#import "MZQuery.h"
+
+@interface AppDelegate ()
+@property (strong, nonatomic) UIManagedDocument *document;
+@end
 
 @implementation AppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-    // Override point for customization after application launch.
+    [[UIApplication sharedApplication] setMinimumBackgroundFetchInterval:UIApplicationBackgroundFetchIntervalMinimum];
+    self.document = [self openDocumentNamed:[NSString stringWithFormat:@"MZ-%@", [MZQuery loggedInId]] completion:^(BOOL success) {
+        if (success) {
+            [[NSNotificationCenter defaultCenter] postNotificationName:DatabaseAvailabilityNotification
+                                                                object:self
+                                                              userInfo:@{ DatabaseAvailabilityContext: self.document.managedObjectContext }];
+        } else {
+            LogError(@"Could not open database");
+        }
+    }];
     
     return YES;
 }
@@ -48,6 +63,23 @@
 - (void)applicationWillTerminate:(UIApplication *)application
 {
     // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+}
+
+- (void)application:(UIApplication *)application performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler
+{
+    if (self.context) {
+        [MZQuery doWorkoutQueryInContext:self.context all:NO completion:^(BOOL newData) {
+            completionHandler(newData ? UIBackgroundFetchResultNewData : UIBackgroundFetchResultNoData);
+            LogDebug(@"New Data: %@", newData ? @"YES" : @"NO");
+        }];
+    } else {
+        completionHandler(UIBackgroundFetchResultNoData);
+    }
+}
+
+- (NSManagedObjectContext *)context
+{
+    return self.document.managedObjectContext;
 }
 
 @end

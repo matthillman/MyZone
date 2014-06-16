@@ -8,9 +8,10 @@
 
 #import "GraphListTableCell.h"
 #import "BarChart.h"
-#import "MZWorkout.h"
+#import "Workout+MZ.h"
 #import "MEPsLabel.h"
 #import "EffortLabel.h"
+#import "Activity.h"
 
 @interface GraphListTableCell ()
 @property (weak, nonatomic) IBOutlet UIImageView *graphView;
@@ -24,7 +25,7 @@
 
 @implementation GraphListTableCell
 
-- (void)configureForWorkout:(MZWorkout *)workout
+- (void)configureForWorkout:(Workout *)workout
 {
     self.workout = workout;
     self.graphView.image = [self.workout workoutThumbnailGraphAtSize:self.graphView.bounds.size];
@@ -36,7 +37,7 @@
     NSNumberFormatter *nf = [[NSNumberFormatter alloc] init];
     nf.roundingMode = NSNumberFormatterRoundCeiling;
     nf.numberStyle = NSNumberFormatterDecimalStyle;
-    self.titleLabel.text = workout.activity;
+    self.titleLabel.text = workout.activityName;
     self.subTitleLabel.text = [NSString stringWithFormat:@"%@ %@", [f stringFromDate:workout.start], [t stringFromDate:workout.start]];
     self.meps.MEPs = self.workout.meps;
     self.calories.text = [nf stringFromNumber:self.workout.calories];
@@ -47,9 +48,9 @@
 - (void)updateLayout:(UIInterfaceOrientation)orientation
 {
     if (UIDeviceOrientationIsLandscape(orientation)) {
-        self.mepsTop.constant = 10;
+        self.mepsTop.constant = 11;
     } else {
-        self.mepsTop.constant = self.bounds.size.height + 10;
+        self.mepsTop.constant = self.bounds.size.height + 11;
     }
     [self.effort setNeedsDisplay];
 }

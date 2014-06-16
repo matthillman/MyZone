@@ -8,12 +8,12 @@
 
 #import <UIKit/UIKit.h>
 
-@class MZWorkout, BarChart;
+@class Workout, BarChart;
 
 @interface GraphListTableCell : UITableViewCell
-@property (strong, nonatomic) MZWorkout *workout;
+@property (strong, nonatomic) Workout *workout;
 @property (strong, nonatomic) BarChart *grapher;
 
-- (void)configureForWorkout:(MZWorkout *)workout;
+- (void)configureForWorkout:(Workout *)workout;
 - (void)updateLayout:(UIInterfaceOrientation)orientation;
 @end

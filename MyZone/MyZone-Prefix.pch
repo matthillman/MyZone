@@ -17,6 +17,7 @@
 
 #import "Logger.h"
 #import "MZDefs.h"
+#import "DatabaseAvailability.h"
 #import "UILabel+SizeFontToFit.h"
 #import "UIColor+RGB.h"
 #import "NSValue+MZValue.h"

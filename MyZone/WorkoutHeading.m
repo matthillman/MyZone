@@ -7,7 +7,7 @@
 //
 
 #import "WorkoutHeading.h"
-#import "MZWorkout.h"
+#import "Workout+MZ.h"
 
 @implementation WorkoutHeading
 
@@ -23,7 +23,7 @@
     self.maxHrLabel.text = [NSString stringWithFormat:@"Max HR: %@ BPM", max];
 }
 
-- (void)configureWithWorkout:(MZWorkout *)workout
+- (void)configureWithWorkout:(Workout *)workout
 {
     NSDateFormatter *f = [[NSDateFormatter alloc] init];
     NSDateFormatter *t = [[NSDateFormatter alloc] init];

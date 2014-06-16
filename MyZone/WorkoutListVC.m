@@ -9,15 +9,18 @@
 #import "WorkoutListVC.h"
 #import "MZQuery.h"
 #import "MZEvent.h"
-#import "ArrayDataSource.h"
+#import "FetchedResultsDataSource.h"
 #import "GraphListTableCell.h"
 #import "WorkoutVC.h"
-#import "MZWorkout.h"
+#import "Workout.h"
+#import "Activity+MZ.h"
+#import "AppDelegate.h"
 
 static NSString *const WorkoutCellIdentifier = @"Workout List Cell";
 
 @interface WorkoutListVC ()
-@property (strong, nonatomic) IBOutlet ArrayDataSource *dataSource;
+@property (strong, nonatomic) IBOutlet FetchedResultsDataSource *dataSource;
+@property (strong, nonatomic) NSManagedObjectContext *context;
 @end
 
 @implementation WorkoutListVC
@@ -36,39 +39,60 @@ static NSString *const WorkoutCellIdentifier = @"Workout List Cell";
 
 - (IBAction)refresh:(id)sender
 {
-    [self setup];
+    [self.refreshControl beginRefreshing];
+//    [[MZQuery sharedQuery] doWorkoutQueryInContext:self.context all:[sender isKindOfClass:[UIRefreshControl class]]];
+//    dispatch_async(dispatch_queue_create("Main Query Queue", 0), ^{
+        [MZQuery doWorkoutQueryInContext:self.context all:[sender isKindOfClass:[UIRefreshControl class]] completion:^(BOOL newData) {
+            [self.refreshControl endRefreshing];
+            LogDebug(@"Query Done");
+        }];
+//    });
 }
 
 - (void)setup
 {
-    [self.refreshControl beginRefreshing];
-//    [MZQuery getUserProfile];
-    NSDate *s = [NSDate date];
-    NSDateComponents *comp = [[NSDateComponents alloc] init];
-    comp.month = -2;
-    s = [[NSCalendar currentCalendar] dateByAddingComponents:comp toDate:[NSDate date] options:0];
+    self.context = [(AppDelegate *)[[UIApplication sharedApplication] delegate] context];
+    if (!self.context) {
+        [[NSNotificationCenter defaultCenter] addObserverForName:DatabaseAvailabilityNotification
+                                                          object:nil
+                                                           queue:nil
+                                                      usingBlock:^(NSNotification *note) {
+                                                          self.context = note.userInfo[DatabaseAvailabilityContext];
+                                                      }];
+    }
+}
+
+- (void)setContext:(NSManagedObjectContext *)context
+{
+    NSManagedObjectContext *old = _context;
+    _context = context;
+    if (self.context && ![self.context isEqual:old]) {
+        [self contextIsReady];
+    }
+}
+
+- (void)contextIsReady
+{
+    NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
+    NSEntityDescription *entity = [NSEntityDescription entityForName:@"Workout" inManagedObjectContext:self.context];
+    [fetchRequest setEntity:entity];
+    fetchRequest.predicate = nil;
+    NSSortDescriptor *start = [[NSSortDescriptor alloc] initWithKey:@"start" ascending:NO];
+    NSSortDescriptor *end = [[NSSortDescriptor alloc] initWithKey:@"end" ascending:NO];
+    [fetchRequest setSortDescriptors:@[start, end]];
     
-    NSSortDescriptor *descriptor = [[NSSortDescriptor alloc] initWithKey:@"start" ascending:NO];
-    NSSortDescriptor *descriptor2 = [[NSSortDescriptor alloc] initWithKey:@"end" ascending:NO];
+    self.dataSource.delegate = self;
+    self.dataSource.showSectionIndex = NO;
+    [self.dataSource configureForFetchRequest:fetchRequest
+                                    inContext:self.context
+                       withSectionNameKeyPath:@"sectionTitle"
+                               cellIdentifier:WorkoutCellIdentifier
+                           configureCellBlock:^(GraphListTableCell *cell, Workout *workout)
+     {
+         [cell configureForWorkout:workout];
+     }];
     
-    [MZQuery getUserEventsFrom:s to:[NSDate date] completionHandler:^(NSArray *events) {
-        [self.dataSource configureForItems:@[] cellIdentifier:WorkoutCellIdentifier configureCellBlock:^(GraphListTableCell *cell, MZWorkout *workout) {
-            [cell configureForWorkout:workout];
-        }];
-        
-        for (MZEvent *event in events) {
-            [MZQuery getUserWorkoutsForEvent:event completionHandler:^(NSArray *workouts) {
-                for (MZWorkout *w in workouts) {
-                    w.maxHeartRate = event.maximumHeartRate;
-                }
-                NSArray *unsorted = [self.dataSource.items arrayByAddingObjectsFromArray:workouts];
-                self.dataSource.items = [unsorted sortedArrayUsingDescriptors:@[descriptor, descriptor2]];
-                [self.tableView reloadData];
-            }];
-        }
-    }];
-    
-    [self.refreshControl endRefreshing];
+    [self refresh:self];
 }
 
 - (void)loginSuccess
@@ -82,6 +106,7 @@ static NSString *const WorkoutCellIdentifier = @"Workout List Cell";
     if ([segue.identifier isEqualToString:@"show workout"]) {
         WorkoutVC *vc = (WorkoutVC *)segue.destinationViewController;
         vc.workout = ((GraphListTableCell *)sender).workout;
+        vc.activityList = [Activity activityListInContext:self.context];
     }
 }
 
@@ -105,4 +130,16 @@ static NSString *const WorkoutCellIdentifier = @"Workout List Cell";
         [cell updateLayout:self.interfaceOrientation];
     }
 }
+
+- (void)tableView:(UITableView *)tableView willDisplayHeaderView:(UIView *)view forSection:(NSInteger)section
+{
+    // Background color
+    view.tintColor = [UIColor lightGrayColor];
+    
+    // Text Color
+    UITableViewHeaderFooterView *header = (UITableViewHeaderFooterView *)view;
+    header.textLabel.textColor = [UIColor whiteColor];
+    header.textLabel.font = [UIFont fontWithName:@"AvenirNext-DemiBold" size:14];
+}
+
 @end

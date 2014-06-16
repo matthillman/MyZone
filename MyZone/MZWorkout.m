@@ -241,7 +241,7 @@
 
 - (NSArray *)detailViews
 {
-    NSMutableArray *ret = [@[] mutableCopy];
+    NSMutableArray *ret = [NSMutableArray array];
     CGRect subLabelFrame = CGRectMake(0, 0, 100, 30);
     UIFont *labelFont = [UIFont fontWithName:@"AvenirNext" size:14];
     

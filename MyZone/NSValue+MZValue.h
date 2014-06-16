@@ -10,4 +10,6 @@
 @interface NSValue (MZValue)
 + (NSValue *)valueWithMZPoint:(MZPoint)point;
 - (MZPoint)mzPointValue;
++ (NSValue *)valueWithTZRange:(TZRange)range;
+- (TZRange)tzRangeValue;
 @end

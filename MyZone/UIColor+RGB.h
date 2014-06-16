@@ -12,4 +12,5 @@
 + (UIColor *)colorForR:(NSInteger)r G:(NSInteger)g B:(NSInteger)b A:(CGFloat)a;
 + (UIColor *)colorForHex:(NSInteger)hex;
 + (UIColor *)fillColorForZone:(MZZoneKey)zone;
++ (NSDictionary *)fillColors;
 @end

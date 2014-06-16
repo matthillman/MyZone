@@ -54,4 +54,6 @@ NS_INLINE CGPoint CGPointFromMZPoint(MZPoint point) {
     return CGPointMake(point.time, point.effort);
 }
 
+#define MZ_SESSION @"MZQuery"
+
 #endif

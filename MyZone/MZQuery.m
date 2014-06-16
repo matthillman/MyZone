@@ -8,7 +8,7 @@
 
 #import "MZQuery.h"
 #import "MZEvent.h"
-#import "MZWorkout.h"
+#import "Workout+MZ.h"
 #import <CommonCrypto/CommonDigest.h>
 #import "SSKeychain.h"
 
@@ -34,7 +34,24 @@ typedef NSUInteger MZRequestType;
 #define USER @"USER"
 #define MYZONE @"mz"
 
+@interface MZQuery () <NSURLSessionDownloadDelegate>
+@property (strong, nonatomic) NSURLSession *backgroundSession;
+@property (strong, nonatomic) NSManagedObjectContext *context;
+@end
+
 @implementation MZQuery
+
++ (id)sharedQuery
+{
+    static MZQuery *sharedQuery = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        sharedQuery = [[self alloc] init];
+    });
+    return sharedQuery;
+}
+
+#pragma mark Login
 
 + (BOOL)loginUser:(NSString *)user password:(NSString *)password
 {
@@ -56,6 +73,13 @@ typedef NSUInteger MZRequestType;
     return [[NSUserDefaults standardUserDefaults] valueForKey:GUID] != nil;
 }
 
++ (NSString *)loggedInId
+{
+    return [[NSUserDefaults standardUserDefaults] valueForKey:GUID];
+}
+
+#pragma mark User Profile
+
 + (void)getUserProfileWithCompletionHandler:(void (^)(NSDictionary *results))completion
 {
     [MZQuery query:MZRequestTypeProfile withParameters:@{@"guid": [[NSUserDefaults standardUserDefaults] valueForKey:GUID]}
@@ -64,39 +88,136 @@ typedef NSUInteger MZRequestType;
             }];
 }
 
+#pragma mark Queries with Completion Blocks
+
++ (void)doWorkoutQueryInContext:(NSManagedObjectContext *)context all:(BOOL)all completion:(void (^)(BOOL newData))completion
+{
+    NSDate *s = nil;
+    NSFetchRequest *dateRequest = [[NSFetchRequest alloc] initWithEntityName:@"Workout"];
+    dateRequest.resultType = NSDictionaryResultType;
+    NSString *function = all ? @"min:" : @"max:";
+    NSExpressionDescription *expressionDescription = [[NSExpressionDescription alloc] init];
+    expressionDescription.name = @"startDate";
+    expressionDescription.expression = [NSExpression expressionForFunction:function arguments:@[[NSExpression expressionForKeyPath:@"start"]]];
+    expressionDescription.expressionResultType = NSDateAttributeType;
+    dateRequest.propertiesToFetch = @[expressionDescription];
+    
+    NSError *error = nil;
+    NSArray *fetchResult = [context executeFetchRequest:dateRequest error:&error];
+    if (fetchResult == nil) {
+        LogDebug(@"%@", error.debugDescription);
+    } else {
+        s = [[fetchResult firstObject] valueForKey:@"startDate"];
+    }
+    if (!s) {
+        NSDateComponents *comp = [[NSDateComponents alloc] init];
+        comp.month = -4;
+        s = [[NSCalendar currentCalendar] dateByAddingComponents:comp toDate:[NSDate date] options:0];
+        LogDebug(@"Using date {%@} becuase there were no results", s);
+    } else {
+        NSDateComponents *comp = [[NSDateComponents alloc] init];
+        comp.day = -1;
+        s = [[NSCalendar currentCalendar] dateByAddingComponents:comp toDate:s options:0];
+        LogDebug(@"Fetched date {%@} using {%@}", s, function);
+    }
+    
+    [MZQuery getUserEventsFrom:s to:[NSDate date] completionHandler:^(NSArray *events) {
+        if (![events count]) {
+            dispatch_async(dispatch_get_main_queue(), ^{ completion(NO); });
+        } else {
+            NSMutableArray *fetchedEvents = [NSMutableArray arrayWithCapacity:[events count]];
+            for (MZEvent *event in events) {
+                [MZQuery getUserWorkoutsForEvent:event inContext:context completionHandler:^(NSArray *workouts) {
+                    for (Workout *w in workouts) {
+                        w.maxHeartRate = event.maximumHeartRate;
+                    }
+                    [fetchedEvents addObject:event];
+                    if ([fetchedEvents count] == [events count]) {
+                        dispatch_async(dispatch_get_main_queue(), ^{ completion(YES); });
+                    }
+                }];
+            }
+        }
+    }];
+}
+
 + (void)getUserEventsFrom:(NSDate *)start to:(NSDate *)end completionHandler:(void (^)(NSArray *events))completion
 {
-    [MZQuery query:MZRequestTypeEvents withParameters:@{@"guid": [[NSUserDefaults standardUserDefaults] valueForKey:GUID],
-                                                                               @"startdate": @([start timeIntervalSince1970]),
-                                                                               @"enddate": @([end timeIntervalSince1970])}
-                            completionHandler:^(id response) {
-                                NSArray *jsonEvents = response[@"dates"][@"events"];
-                                NSArray *events = @[];
-                                
-                                for (NSDictionary *jsonEvent in jsonEvents) {
-                                    events = [events arrayByAddingObject:[MZEvent eventForJSONEventDictionary:jsonEvent]];
-                                }
-                                
-                                completion(events);
-                            }];
+    [MZQuery query:MZRequestTypeEvents
+    withParameters:@{@"guid": [[NSUserDefaults standardUserDefaults] valueForKey:GUID],
+                     @"startdate": @([start timeIntervalSince1970]),
+                     @"enddate": @([end timeIntervalSince1970])}
+ completionHandler:^(id response) {
+     NSArray *events = @[];
+     if ([response[@"dates"][@"events"] isKindOfClass:[NSArray class]]) {
+         NSArray *jsonEvents = response[@"dates"][@"events"];
+         
+         for (NSDictionary *jsonEvent in jsonEvents) {
+             events = [events arrayByAddingObject:[MZEvent eventForJSONEventDictionary:jsonEvent]];
+         }
+     }
+     completion(events);
+ }];
 
 }
 
-+ (void)getUserWorkoutsForEvent:(MZEvent *)event completionHandler:(void (^)(NSArray *workouts))completion
++ (void)getUserWorkoutsForEvent:(MZEvent *)event inContext:(NSManagedObjectContext *)context completionHandler:(void (^)(NSArray *workouts))completion
 {
-    [MZQuery getUserWorkoutsFrom:event.start to:event.end completionHandler:completion];
+    [MZQuery getUserWorkoutsFrom:event.start to:event.end inContext:context completionHandler:completion];
 }
 
-+ (void)getUserWorkoutsFrom:(NSDate *)start to:(NSDate *)end completionHandler:(void (^)(NSArray *workouts))completion
++ (void)getUserWorkoutsFrom:(NSDate *)start to:(NSDate *)end inContext:(NSManagedObjectContext *)context completionHandler:(void (^)(NSArray *workouts))completion
 {
-    [MZQuery query:MZRequestTypeWorkout withParameters:@{@"guid": [[NSUserDefaults standardUserDefaults] valueForKey:GUID],
-                                                                                @"start": [[MZQuery shortDateString:start] stringByAppendingString:@" 00:00"],
-                                                                                @"end": [[MZQuery shortDateString:end] stringByAppendingString:@" 23:59"]}
-                            completionHandler:^(id response) {
-                                completion([MZWorkout workoutsForJSONWorkoutDictionary:(NSDictionary *)response[@"chart"]]);
-                            }];
-
+    [MZQuery query:MZRequestTypeWorkout
+    withParameters:@{@"guid": [[NSUserDefaults standardUserDefaults] valueForKey:GUID],
+                     @"start": [[MZQuery shortDateString:start] stringByAppendingString:@" 00:00"],
+                     @"end": [[MZQuery shortDateString:end] stringByAppendingString:@" 23:59"]}
+ completionHandler:^(id response) {
+     [context performBlock:^{
+         NSArray *res = [Workout workoutsForJSONWorkoutDictionary:(NSDictionary *)response[@"chart"] inContext:context];
+         [context save:NULL];
+         dispatch_async(dispatch_get_main_queue(), ^{ completion(res); });
+     }];
+ }];
 }
+
+#pragma mark Queries with Delegate (background)
+
+- (void)doWorkoutQueryInContext:(NSManagedObjectContext *)context all:(BOOL)all
+{
+    [self.backgroundSession getTasksWithCompletionHandler:^(NSArray *dataTasks, NSArray *uploadTasks, NSArray *downloadTasks) {
+        // let's see if we're already working on a fetch ...
+        if (![downloadTasks count]) {
+            self.context = context;
+//            [self query:MZRequestTypeEvents
+//         withParameters:@{@"guid": [[NSUserDefaults standardUserDefaults] valueForKey:GUID],
+//                          @"startdate": @([[MZQuery getStartDateInContext:context all:all] timeIntervalSince1970]),
+//                          @"enddate": @([[NSDate date] timeIntervalSince1970])}];
+            [self getUserWorkoutsFrom:[MZQuery getStartDateInContext:self.context all:all] to:[NSDate date]];
+        } else {
+            // ... we are working on a fetch (let's make sure it (they) is (are) running while we're here)
+            for (NSURLSessionDownloadTask *task in downloadTasks) [task resume];
+        }
+    }];
+}
+
+- (void)getUserWorkoutsForEvent:(MZEvent *)event
+{
+    [self query:MZRequestTypeWorkout
+    withParameters:@{@"guid": [[NSUserDefaults standardUserDefaults] valueForKey:GUID],
+                     @"start": [[MZQuery shortDateString:event.start] stringByAppendingString:@" 00:00"],
+                     @"end": [[MZQuery shortDateString:event.end] stringByAppendingString:@" 23:59"]}];
+}
+
+- (void)getUserWorkoutsFrom:(NSDate *)start to:(NSDate *)end
+{
+    [self query:MZRequestTypeWorkout
+ withParameters:@{@"guid": [[NSUserDefaults standardUserDefaults] valueForKey:GUID],
+                  @"start": [[MZQuery shortDateString:start] stringByAppendingString:@" 00:00"],
+                  @"end": [[MZQuery shortDateString:end] stringByAppendingString:@" 23:59"]}];
+}
+
+#pragma mark Util Methods
 
 + (MZZoneKey)zoneForAverageEffort:(NSString *)averageEffort
 {
@@ -108,6 +229,93 @@ typedef NSUInteger MZRequestType;
 }
 
 #pragma mark Private Methods
+
++ (NSDate *)getStartDateInContext:(NSManagedObjectContext *)context all:(BOOL)all
+{
+    NSDate *s = nil;
+    NSFetchRequest *dateRequest = [[NSFetchRequest alloc] initWithEntityName:@"Workout"];
+    dateRequest.resultType = NSDictionaryResultType;
+    NSString *function = all ? @"min:" : @"max:";
+    NSExpressionDescription *expressionDescription = [[NSExpressionDescription alloc] init];
+    expressionDescription.name = @"startDate";
+    expressionDescription.expression = [NSExpression expressionForFunction:function arguments:@[[NSExpression expressionForKeyPath:@"start"]]];
+    expressionDescription.expressionResultType = NSDateAttributeType;
+    dateRequest.propertiesToFetch = @[expressionDescription];
+    
+    NSError *error = nil;
+    NSArray *fetchResult = [context executeFetchRequest:dateRequest error:&error];
+    if (fetchResult == nil) {
+        LogDebug(@"%@", error.debugDescription);
+    } else {
+        s = [[fetchResult firstObject] valueForKey:@"startDate"];
+    }
+    if (!s) {
+        NSDateComponents *comp = [[NSDateComponents alloc] init];
+        comp.month = -4;
+        s = [[NSCalendar currentCalendar] dateByAddingComponents:comp toDate:[NSDate date] options:0];
+        LogDebug(@"Using date {%@} becuase there were no results", s);
+    } else {
+        NSDateComponents *comp = [[NSDateComponents alloc] init];
+        comp.day = -1;
+        s = [[NSCalendar currentCalendar] dateByAddingComponents:comp toDate:s options:0];
+        LogDebug(@"Fetched date {%@} using {%@}", s, function);
+    }
+    
+    return s;
+}
+
+- (void)query:(MZRequestType)type withParameters:(NSDictionary *)parameters
+{
+    static NSString *url = @"http://myzonemoves.com/myzone/mobile/";
+    
+    NSString *get = [NSString stringWithFormat:@"requestType=%lu", (unsigned long)type];
+    for (NSString *key in parameters) {
+        get = [get stringByAppendingString:[NSString stringWithFormat:@"&%@=%@", key, parameters[key]]];
+    }
+    
+    static NSString *query = @"?%@";
+    NSMutableURLRequest *request = [[NSMutableURLRequest alloc] init];
+    NSString *formatted = [NSString stringWithFormat:query, [get stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    [request setHTTPMethod:@"GET"];
+    
+    NSURL *reqUrl = [NSURL URLWithString:[NSString stringWithFormat:@"%@%@", url, formatted]];
+    request.URL = reqUrl;
+    
+    NSURLSessionDownloadTask *task = [self.backgroundSession downloadTaskWithRequest:request];
+    
+    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
+    
+    [task resume];
+}
+
+- (NSURLSession *)backgroundSession
+{
+    if (!_backgroundSession) {
+        static dispatch_once_t onceToken;
+        dispatch_once(&onceToken, ^{
+            NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration backgroundSessionConfiguration:MZ_SESSION];
+            _backgroundSession = [NSURLSession sessionWithConfiguration:configuration delegate:self delegateQueue:nil];
+        });
+    }
+    return _backgroundSession;
+}
+
++ (id)processResult:(NSURL *)localFile
+{
+    NSString *jsonResult = [[NSString alloc] initWithData:[NSData dataWithContentsOfURL:localFile] encoding:NSUTF8StringEncoding];
+    
+    NSData *jsonData = [jsonResult dataUsingEncoding:NSUTF8StringEncoding];
+    NSError *e;
+    id res = [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:&e];
+    if (e != nil) {
+        if (e.code == 3840) {
+            res = jsonResult;
+        } else {
+            LogError(@"Error decoding json\n%@\nwith error\n%@", jsonResult, e);
+        }
+    }
+    return [MZQuery convertOjbect:res];
+}
 
 /**
  * Queries the MyZone Site
@@ -156,7 +364,10 @@ typedef NSUInteger MZRequestType;
                         LogError(@"Error decoding json\n%@\nwith error\n%@", jsonResult, e);
                     }
                 }
-                dispatch_async(dispatch_get_main_queue(), ^{ completion(res); });
+                res = [MZQuery convertOjbect:res];
+//                dispatch_async(dispatch_get_main_queue(), ^{
+                    completion(res);
+//                });
             }
         } else {
             LogError(@"Error retrieving query from MyZone:\n%@", error);
@@ -168,7 +379,7 @@ typedef NSUInteger MZRequestType;
     [task resume];
 }
 
-+ (void)updateWorkout:(NSString *)hrhIndex activity:(NSString *)activityId completionHandler:(void (^)(id response))completion
++ (void)updateWorkout:(NSNumber *)hrhIndex activity:(NSString *)activityId completionHandler:(void (^)(id response))completion
 {
     static NSString *url = @"http://myzonemoves.com/myzone/dashboard/sections/saveactivity.php";
     static NSString *query = @"?actIndex=%@&hrhIndex=%@";
@@ -198,6 +409,7 @@ typedef NSUInteger MZRequestType;
                             LogError(@"Error decoding json\n%@\nwith error\n%@", jsonResult, e);
                         }
                     }
+                    res = [MZQuery convertOjbect:res];
                     dispatch_async(dispatch_get_main_queue(), ^{ completion(res); });
                 }
             } else {
@@ -241,7 +453,9 @@ typedef NSUInteger MZRequestType;
                     [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
                     if (!error) {
                         if ([request.URL isEqual:reqUrl]) {
-                            dispatch_async(dispatch_get_main_queue(), ^{ completion(session, cookieHeaders); });
+//                            dispatch_async(dispatch_get_main_queue(), ^{
+                                completion(session, cookieHeaders);
+//                            });
                         }
                     } else {
                         LogError(@"Error retrieving query from MyZone:\n%@", error);
@@ -341,7 +555,7 @@ typedef NSUInteger MZRequestType;
 {
     id ret;
     if ([obj isKindOfClass:[NSDictionary class]]) {
-        NSMutableDictionary *res = [@{} mutableCopy];
+        NSMutableDictionary *res = [NSMutableDictionary dictionary];
         
         for (id key in (NSDictionary *)obj) {
             res[key] = [MZQuery convertOjbect:[(NSDictionary *)obj objectForKey:key]];
@@ -349,7 +563,7 @@ typedef NSUInteger MZRequestType;
         
         ret = res;
     } else if ([obj isKindOfClass:[NSArray class]]) {
-        NSMutableArray *res = [@[] mutableCopy];
+        NSMutableArray *res = [NSMutableArray array];
         
         for (NSObject *item in (NSArray *)obj) {
             [res addObject:[MZQuery convertOjbect:item]];
@@ -373,4 +587,36 @@ typedef NSUInteger MZRequestType;
     
     return ret;
 }
+
+- (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask didFinishDownloadingToURL:(NSURL *)location
+{
+    NSDictionary *response = [MZQuery processResult:location];
+    if ([response[@"dates"][@"events"] isKindOfClass:[NSArray class]]) {
+        NSArray *jsonEvents = response[@"dates"][@"events"];
+        for (NSDictionary *jsonEvent in jsonEvents) {
+            MZEvent *event = [MZEvent eventForJSONEventDictionary:jsonEvent];
+            [self getUserWorkoutsForEvent:event];
+        }
+        LogDebug(@"Got %d events", [jsonEvents count]);
+    } else if ([response[@"chart"] isKindOfClass:[NSDictionary class]]) {
+        /*NSArray *workouts = */[Workout workoutsForJSONWorkoutDictionary:response[@"chart"] inContext:self.context];
+//        for (Workout *w in workouts) {
+//            w.maxHeartRate = self.event.maximumHeartRate;
+//        }
+        [self.context save:NULL];
+        LogDebug(@"Updated workouts");
+    }
+    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+}
+
+- (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask didResumeAtOffset:(int64_t)fileOffset expectedTotalBytes:(int64_t)expectedTotalBytes
+{
+    
+}
+
+- (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask didWriteData:(int64_t)bytesWritten totalBytesWritten:(int64_t)totalBytesWritten totalBytesExpectedToWrite:(int64_t)totalBytesExpectedToWrite
+{
+    
+}
+
 @end

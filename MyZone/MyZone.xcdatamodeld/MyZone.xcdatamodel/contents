@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model userDefinedModelVersionIdentifier="0.1" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="5063" systemVersion="13C64" minimumToolsVersion="Xcode 4.3" macOSVersion="Automatic" iOSVersion="Automatic">
+    <entity name="Activity" representedClassName="Activity" syncable="YES">
+        <attribute name="label" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="value" optional="YES" attributeType="String" syncable="YES"/>
+        <relationship name="workout" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Workout" inverseName="activity" inverseEntity="Workout" syncable="YES"/>
+    </entity>
+    <entity name="Effort" representedClassName="Effort" syncable="YES">
+        <attribute name="effort" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="time" optional="YES" attributeType="Double" defaultValueString="0.0" syncable="YES"/>
+        <attribute name="z" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <relationship name="workout" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Workout" inverseName="effort" inverseEntity="Workout" syncable="YES"/>
+    </entity>
+    <entity name="Workout" representedClassName="Workout" syncable="YES">
+        <attribute name="activityName" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="averageEffort" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="averageHeartRate" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="calories" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="end" optional="YES" attributeType="Date" syncable="YES"/>
+        <attribute name="hrhIndex" optional="YES" attributeType="Integer 64" defaultValueString="0" syncable="YES"/>
+        <attribute name="maxHeartRate" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="meps" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="mepsInZone1" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="mepsInZone2" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="mepsInZone3" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="mepsInZone4" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="mepsInZone5" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="minutesInZone0" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="minutesInZone1" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="minutesInZone2" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="minutesInZone3" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="minutesInZone4" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="minutesInZone5" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="move" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="numberOfMoves" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="peakHeartRate" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="sectionTitle" optional="YES" transient="YES" attributeType="String" syncable="YES"/>
+        <attribute name="start" optional="YES" attributeType="Date" syncable="YES"/>
+        <attribute name="targetZoneDuration" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="targetZoneMax" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="targetZoneMin" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="totalDuration" optional="YES" attributeType="String" syncable="YES"/>
+        <relationship name="activity" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Activity" inverseName="workout" inverseEntity="Activity" syncable="YES"/>
+        <relationship name="effort" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Effort" inverseName="workout" inverseEntity="Effort" syncable="YES"/>
+        <fetchedProperty name="effortInZone0" optional="YES" syncable="YES">
+            <fetchRequest name="fetchedPropertyFetchRequest" entity="Effort" predicateString="SELF.z = 0"/>
+        </fetchedProperty>
+        <fetchedProperty name="effortInZone1" optional="YES" syncable="YES">
+            <fetchRequest name="fetchedPropertyFetchRequest" entity="Effort" predicateString="SELF.z = 1"/>
+        </fetchedProperty>
+        <fetchedProperty name="effortInZone2" optional="YES" syncable="YES">
+            <fetchRequest name="fetchedPropertyFetchRequest" entity="Effort" predicateString="SELF.z = 2"/>
+        </fetchedProperty>
+        <fetchedProperty name="effortInZone3" optional="YES" syncable="YES">
+            <fetchRequest name="fetchedPropertyFetchRequest" entity="Effort" predicateString="SELF.z = 3"/>
+        </fetchedProperty>
+        <fetchedProperty name="effortInZone4" optional="YES" syncable="YES">
+            <fetchRequest name="fetchedPropertyFetchRequest" entity="Effort" predicateString="SELF.z = 4"/>
+        </fetchedProperty>
+        <fetchedProperty name="effortInZone5" optional="YES" syncable="YES">
+            <fetchRequest name="fetchedPropertyFetchRequest" entity="Effort" predicateString="SELF.z = 5"/>
+        </fetchedProperty>
+    </entity>
+    <elements>
+        <element name="Activity" positionX="-2" positionY="767" width="128" height="88"/>
+        <element name="Effort" positionX="459" positionY="747" width="128" height="103"/>
+        <element name="Workout" positionX="214" positionY="380" width="128" height="599"/>
+    </elements>
+</model>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "-[WorkoutVC viewDidLoad]:WorkoutVC.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.charPicture.image.size">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "+[MZQuery getUserWorkoutsFrom:to:]:MZQuery.m">
+      </ContextState>
+      <ContextState
+         contextName = "+[MZQuery getUserEventsFrom:to:]:MZQuery.m">
+      </ContextState>
+      <ContextState
+         contextName = "+[MZWorkout workouttForJSONWorkoutDictionary:]:MZWorkout.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[BarChartView setPoints:]:BarChartView.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[BarChart renderImgaeAtSize:]:BarChart.m">
+      </ContextState>
+      <ContextState
+         contextName = "+[MZWorkout workoutForJSONWorkoutDictionary:]:MZWorkout.m">
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>

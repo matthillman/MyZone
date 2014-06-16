@@ -50,4 +50,14 @@
     return [UIColor colorForHex:hexColor];
 }
 
++ (NSDictionary *)fillColors
+{
+    return @{@"0": @{@"fill": [UIColor fillColorForZone:MZZone0]},
+             @"1": @{@"fill": [UIColor fillColorForZone:MZZone1]},
+             @"2": @{@"fill": [UIColor fillColorForZone:MZZone2]},
+             @"3": @{@"fill": [UIColor fillColorForZone:MZZone3]},
+             @"4": @{@"fill": [UIColor fillColorForZone:MZZone4]},
+             @"5": @{@"fill": [UIColor fillColorForZone:MZZone5]}};
+}
+
 @end
