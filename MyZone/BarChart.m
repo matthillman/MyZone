@@ -243,7 +243,7 @@ NS_INLINE BarLengths BarLengthsMake(CGFloat xMin, CGFloat xMax, CGFloat yMin, CG
         }
         
         NSDate *d0 = [NSDate dateWithTimeIntervalSince1970:x0];
-        NSUInteger componentFlags = NSYearCalendarUnit | NSMonthCalendarUnit | NSDayCalendarUnit | NSHourCalendarUnit | NSMinuteCalendarUnit;// | NSSecondCalendarUnit;
+        NSUInteger componentFlags = NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitDay | NSCalendarUnitHour | NSCalendarUnitMinute;// | NSSecondCalendarUnit;
         NSDateComponents *tickComponents = [[NSCalendar currentCalendar] components:componentFlags fromDate:d0];
         NSDateComponents *fiveMinTickComponents = [tickComponents copy];
         NSDateComponents *labelComponents = [tickComponents copy];

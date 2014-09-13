@@ -293,7 +293,7 @@ typedef NSUInteger MZRequestType;
     if (!_backgroundSession) {
         static dispatch_once_t onceToken;
         dispatch_once(&onceToken, ^{
-            NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration backgroundSessionConfiguration:MZ_SESSION];
+            NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:MZ_SESSION];
             _backgroundSession = [NSURLSession sessionWithConfiguration:configuration delegate:self delegateQueue:nil];
         });
     }

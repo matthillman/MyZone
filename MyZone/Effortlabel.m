@@ -36,9 +36,11 @@
 
 - (void)setup
 {
-    CGFloat w = MIN(1.5 * CGRectGetHeight(self.bounds), CGRectGetWidth(self.bounds)-2);
-    CGFloat x = (CGRectGetWidth(self.bounds) - w) / 2.0f * 1.1;
-    self.drawingFrame = CGRectMake(x, 2, w, CGRectGetHeight(self.bounds)-4);
+    CGFloat w = MIN(1.5 * CGRectGetHeight(self.frame), CGRectGetWidth(self.frame)-2);
+    CGFloat x = (CGRectGetWidth(self.frame) - w) / 2.0f * 1.1;
+    LogDebug(@"View width is %@", CGRectGetWidth(self.frame));
+    LogDebug(@"Drawing frame width is %@", w);
+    self.drawingFrame = CGRectMake(x, 2, w, CGRectGetHeight(self.frame)-4);
     self.text.frame = UIEdgeInsetsInsetRect(self.drawingFrame, UIEdgeInsetsMake(3, 3, 3, 3));
     self.text.textColor = [UIColor whiteColor];
     self.text.textAlignment = NSTextAlignmentCenter;
@@ -50,9 +52,26 @@
     [self addSubview:self.text];
     [self bringSubviewToFront:self.text];
     self.text.translatesAutoresizingMaskIntoConstraints = NO;
-    [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"|-3-[lab]-3-|" options:0 metrics:nil views:@{@"lab": self.text}]];
+//    [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"|-3-[lab]-3-|" options:0 metrics:nil views:@{@"lab": self.text}]];
 //    [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-3-[lab]-3-|" options:0 metrics:nil views:@{@"lab": self.text}]];
+    
+    UIView *superview = self;
+    UILabel *label = self.text;
+    NSDictionary *variables = NSDictionaryOfVariableBindings(label, superview);
+    NSArray *constraints = [NSLayoutConstraint constraintsWithVisualFormat:@"V:[superview]-(<=1)-[label]"
+                                                                   options:NSLayoutFormatAlignAllCenterX
+                                                                   metrics:nil
+                                                                     views:variables];
+    [self addConstraints:constraints];
+    
+    constraints = [NSLayoutConstraint constraintsWithVisualFormat:@"H:[superview]-(<=1)-[label]"
+                                                          options:NSLayoutFormatAlignAllCenterY
+                                                          metrics:nil
+                                                            views:variables];
+    [self addConstraints:constraints];
+    
     [self.text sizeToFont];
+    self.text.textAlignment = NSTextAlignmentCenter;
 }
 
 - (UILabel *)text
